@@ -4,7 +4,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"message": "API rodando na VM!"}
+    return {"message": "API LeXota na VM!"}
 
 @app.get("/soma")
 def soma(a: int, b: int):
