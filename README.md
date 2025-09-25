@@ -1,4 +1,4 @@
-# 📘 Nome do Projeto
+# 📘 LexoraAPI
 
 Descrição breve do que o projeto faz e por que ele é útil.
 
