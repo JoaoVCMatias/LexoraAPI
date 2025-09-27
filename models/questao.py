@@ -5,9 +5,9 @@ from sqlalchemy import Identity
 class Questao(Base):
     __tablename__ = "questao"
 
-    idquestao = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    id_questao = Column(Integer, primary_key=True, server_default=Identity(start=1))
     json = Column(String(100), nullable=False)
-    idobjetivo = Column(Integer, ForeignKey("objetivo.idobjetivo"), nullable=False)
-    idtipoquestao = Column(Integer, ForeignKey("tipo_questao.idtipoquestao"), nullable=False)
+    id_objetivo = Column(Integer, ForeignKey("objetivo.id_objetivo"), nullable=False)
+    id_tipo_questao = Column(Integer, ForeignKey("tipo_questao.id_tipo_questao"), nullable=False)
     nivel = Column(Integer, nullable=False)
-    caminhoarquivo = Column(String(100))
+    caminho_arquivo = Column(String(100))

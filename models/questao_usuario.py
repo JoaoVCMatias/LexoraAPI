@@ -5,10 +5,10 @@ from sqlalchemy import Identity
 class QuestaoUsuario(Base):
     __tablename__ = "questao_usuario"
 
-    idquestaousuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    id_questaousuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
     acerto = Column(Boolean)
-    dataacerto = Column(String(3))
-    idquestao = Column(Integer, ForeignKey("questao.idquestao"), nullable=False)
-    idusuario = Column(Integer, ForeignKey("usuario.idusuario"), nullable=False)
-    idconjuntoquestao = Column(Integer, ForeignKey("conjunto_questao.idconjuntoquestao"), nullable=False)
-    datacriacao = Column(DateTime, nullable=False)
+    data_acerto = Column(String(3))
+    id_questao = Column(Integer, ForeignKey("questao.id_questao"), nullable=False)
+    id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+    id_conjunto_questao = Column(Integer, ForeignKey("conjunto_questao.id_conjunto_questao"), nullable=False)
+    data_criacao = Column(DateTime, nullable=False)

@@ -5,7 +5,7 @@ from sqlalchemy import Identity
 class ExperienciaIdiomaUsuario(Base):
     __tablename__ = "experiencia_idioma_usuario"
 
-    idexperienciaidiomausuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
-    idusuario = Column(Integer, ForeignKey("usuario.idusuario"), nullable=False)
-    ididioma = Column(Integer, ForeignKey("idioma.ididioma"), nullable=False)
-    idexperienciaidioma = Column(Integer, ForeignKey("experiencia_idioma.idexperienciaidioma"), nullable=False)
+    id_experiencia_idioma_usuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+    id_idioma = Column(Integer, ForeignKey("idioma.id_idioma"), nullable=False)
+    id_experiencia_idioma = Column(Integer, ForeignKey("experiencia_idioma.id_experiencia_idioma"), nullable=False)

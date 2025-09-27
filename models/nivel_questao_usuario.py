@@ -5,7 +5,7 @@ from sqlalchemy import Identity
 class NivelQuestaoUsuario(Base):
     __tablename__ = "nivel_questao_usuario"
 
-    idnivelquestaousuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    id_nivel_questao_usuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
     nivel = Column(Integer, nullable=False)
-    idusuario = Column(Integer, ForeignKey("usuario.idusuario"), nullable=False)
-    idquestao = Column(Integer, ForeignKey("questao.idquestao"), nullable=False)
+    id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
+    id_questao = Column(Integer, ForeignKey("questao.id_questao"), nullable=False)

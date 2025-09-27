@@ -5,5 +5,5 @@ from sqlalchemy import Identity
 class Idioma(Base):
     __tablename__ = "idioma"
 
-    ididioma = Column(Integer, primary_key=True, server_default=Identity(start=1))
-    descricaoidioma = Column(String(50))
+    id_idioma = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    descricao_idioma = Column(String(50))

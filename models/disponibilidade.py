@@ -5,5 +5,5 @@ from sqlalchemy import Identity
 class Disponibilidade(Base):
     __tablename__ = "disponibilidade"
 
-    iddisponibilidade = Column(Integer, primary_key=True, server_default=Identity(start=1))
-    descricaodisponibilidade = Column(String(50), nullable=False)
+    id_disponibilidade = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    descricao_disponibilidade = Column(String(50), nullable=False)

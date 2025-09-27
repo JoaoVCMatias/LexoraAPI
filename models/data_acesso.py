@@ -5,6 +5,6 @@ from sqlalchemy import Identity
 class DataAcesso(Base):
     __tablename__ = "data_acesso"
 
-    iddataacesso = Column(Integer, primary_key=True, server_default=Identity(start=1))
-    dataacesso = Column(DateTime)
-    idusuario = Column(Integer, ForeignKey("usuario.idusuario"), nullable=False), 
+    id_data_acesso = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    data_acesso = Column(DateTime)
+    id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False), 
