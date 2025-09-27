@@ -214,3 +214,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Alembic
+migrations/__pycache__/
+migrations/*.pyc
+
+# Banco local de testes
+*.db
+*.sqlite3
+
+# Logs
+*.log
+
+# Configs locais
+local_settings.py
+
