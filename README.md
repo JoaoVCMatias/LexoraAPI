@@ -18,6 +18,11 @@ source .venv/bin/activate  # Linux/macOS
 2. Instale as dependências
 pip install -r requirements.txt
 
+4. Execute as migrations
+configure o  database.py
+alembic upgrade head
+
+
 3.Execute a aplicação
 uvicorn main:app --reload
 
