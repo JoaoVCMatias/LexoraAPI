@@ -16,3 +16,4 @@ from .data_acesso import DataAcesso
 from .email_confirmacao import EmailConfirmacao
 from .experiencia_idioma_usuario import ExperienciaIdiomaUsuario
 from .nivel_questao_usuario import NivelQuestaoUsuario
+from .usuario_token import UsuarioToken
