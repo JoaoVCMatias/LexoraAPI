@@ -229,6 +229,6 @@ migrations/*.pyc
 # Configs locais
 local_settings.py
 
-
+config.py
 
 
