@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import config
 
-DATABASE_URL = "postgresql://postgres:416158@localhost:5432/lexora"
+DATABASE_URL = config.DATA_BASE
 
 
 engine = create_engine(DATABASE_URL)
