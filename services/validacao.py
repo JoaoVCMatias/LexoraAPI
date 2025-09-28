@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import exists
 
 class ValidacaoService:
+    
     def __init__(self, db: Session):
         self.db = db
 

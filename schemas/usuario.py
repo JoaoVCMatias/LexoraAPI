@@ -5,5 +5,9 @@ class UsuarioCreate(BaseModel):
     email: EmailStr
     senha: str
 
+class UsuarioAutentication(BaseModel):
+    email: EmailStr
+    senha: str
+
 class UsuarioResponse(BaseModel):
     pass
