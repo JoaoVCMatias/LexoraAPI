@@ -1,7 +1,5 @@
-from fastapi import Depends
 from sqlalchemy.orm import Session
 from schemas.usuario import UsuarioCreate
-from database import get_db
 from models import Usuario
 from datetime import date
 from sqlalchemy.orm import Session
