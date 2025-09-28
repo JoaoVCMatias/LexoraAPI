@@ -1,12 +1,25 @@
-from fastapi import Depends
 from sqlalchemy.orm import Session
-from database import get_db
-from models import sexo
+from models import Sexo, Disponibilidade, ExperienciaIdioma, Idioma, Objetivo, TipoQuestao 
 from sqlalchemy.orm import Session
 
 class DominioService:
     def __init__(self, db: Session):
         self.db = db
-    
+
     def buscar_sexo(self):
-        return self.db.query(sexo).all()
+        return self.db.query(Sexo).all()
+    
+    def buscar_experiencia_idioma(self):
+        return self.db.query(ExperienciaIdioma).all()
+    
+    def buscar_idioma(self):
+        return self.db.query(Idioma).all()
+    
+    def buscar_disponibilidade(self):
+        return self.db.query(Disponibilidade).all()
+    
+    def buscar_objetivo(self):
+        return self.db.query(Objetivo).all()
+    
+    def buscar_tipo_questao(self):
+        return self.db.query(TipoQuestao).all()
