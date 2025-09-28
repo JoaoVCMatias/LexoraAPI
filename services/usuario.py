@@ -59,7 +59,7 @@ class UsuarioService:
         
         autenticacao = AutenticacaoService(self.db)
 
-        autenticacao.delata_token(usuarioCadastrado.id_usuario)
+        autenticacao.delata_token_por_id(usuarioCadastrado.id_usuario)
         token = self.gerar_token(usuarioCadastrado.id_usuario)
         self.salvar_token(usuarioCadastrado, token)
         return token
