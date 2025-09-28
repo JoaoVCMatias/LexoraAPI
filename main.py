@@ -1,9 +1,10 @@
 from fastapi import FastAPI
-from routes import usuario_router, dominio_router
+from routes import usuario_router, dominio_router, validacao_router
 
 app = FastAPI(title="LexoraApi")
 
 app.include_router(usuario_router)
 app.include_router(dominio_router)
+app.include_router(validacao_router)
 
 
