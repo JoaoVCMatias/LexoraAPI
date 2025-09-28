@@ -6,6 +6,7 @@ from database import get_db
 from models import Usuario
 from datetime import date
 #from app.schemas import UsuarioCreate, UsuarioResponse
+from services import UsuarioService
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
@@ -13,9 +14,6 @@ router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 @router.post("/")
 def criar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
-    data_atual = date.today()
-    novo_usuario = Usuario(nome = usuario.nome, email = usuario.email, senha = usuario.senha, cadastro_completo = 0, data_ultimo_acesso = data_atual, data_criacao = data_atual)
-    db.add(novo_usuario)
-    db.commit()
-    db.refresh(novo_usuario)
-    return {1}
+    service = UsuarioService(db)
+    result = service.Cadastrar_Usuario(usuario)
+    return {result}
