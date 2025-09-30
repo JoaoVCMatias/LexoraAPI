@@ -13,9 +13,18 @@ class AutenticacaoService:
         self.db = db
 
     @staticmethod
-    def to_payload(token: str):
+    def token_to_payload(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return payload
+    
+    @staticmethod
+    def payload_to_id_usuario(payload):
+        return payload.get("id_usuario")
+    
+    @staticmethod
+    def token_to_id_usuario(token: str):
+        payload = AutenticacaoService.token_to_payload(token)
+        return AutenticacaoService.payload_to_id_usuario(payload)
     
     def salvar_token(self, usuario_token: UsuarioTokenCreate):
         novo_token = UsuarioToken(id_usuario = usuario_token.id_usuario, token = usuario_token.token)
@@ -32,7 +41,7 @@ class AutenticacaoService:
         self.db.commit()
     
     def delata_token_por_token(self, token: str):
-        payload = self.to_payload(token)
+        payload = self.token_to_payload(token)
         id_usuario = payload.get("id_usuario")
         self.delata_token_por_id(id_usuario)
     
