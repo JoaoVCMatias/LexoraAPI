@@ -13,4 +13,6 @@ class ExperienciaIdiomaUsuarioRepository:
     def alterar_experiencia_idioma_usuario(self, id_experienca_idioma_usuario, id_experiencia_idioma: int):
         experiencia_cadastrada = self.db.query(ExperienciaIdiomaUsuario).filter(ExperienciaIdiomaUsuario.id_experiencia_idioma_usuario == id_experienca_idioma_usuario).first()
         experiencia_cadastrada.id_experiencia_idioma = id_experiencia_idioma
+        self.db.commit()
+        self.db.refresh(experiencia_cadastrada)
 

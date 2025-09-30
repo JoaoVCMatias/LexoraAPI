@@ -52,6 +52,7 @@ class UsuarioService:
         if usuario_cadastrado is None:
             raise HTTPException(status_code=401, detail="Usuário não encontrado.")
         usuario_repositoy.alterar_informacoes_usuario(id_usuario, usuario)
+
   
             
         
