@@ -1,13 +1,16 @@
 from fastapi import  HTTPException
 from sqlalchemy.orm import Session
-from schemas.usuario import UsuarioCreate, UsuarioInfosCreate ,UsuarioAutentication
+from schemas.usuario import UsuarioCreate, UsuarioInfosCreate ,UsuarioAutentication, UsuarioResponse
 from schemas.usuario_token import UsuarioTokenCreate
 from models import Usuario
 from datetime import date
 from .validacao import ValidacaoService
 from .senha import SenhaService
 from .autenticacao import AutenticacaoService
-from repository.usuario import UsuarioRepository
+from repository import UsuarioRepository
+from services.experiencia_idioma_usuario import  ExperienciaIdiomaUsuarioService
+from services.objetivo_usuario import ObjetivoUsuarioService
+
 
 class UsuarioService:
     def __init__(self, db: Session):
@@ -19,7 +22,15 @@ class UsuarioService:
         if email_validacao == False:
             raise HTTPException(status_code=422, detail="Email já cadastrado no sistema.")
         pass
-    
+
+    def pesquisar_usuario(self, id_usuario: int):
+        usuario_repositoy = UsuarioRepository(self.db)
+        usuario_cadastrado = usuario_repositoy.buscar_usuario_por_id(id_usuario)
+        self.db.close()
+        if usuario_cadastrado is None:
+            raise HTTPException(status_code=401, detail="Usuário não encontrado.")
+        return usuario_cadastrado
+        
     @staticmethod
     def gerar_hash_senha(senha : str) -> bytes:
         senhaService = SenhaService()
@@ -48,11 +59,21 @@ class UsuarioService:
 
     def alterar_usuario_informacao(self, id_usuario, usuario: UsuarioInfosCreate):
         usuario_repositoy = UsuarioRepository(self.db)
-        usuario_cadastrado = usuario_repositoy.buscar_usuario_por_id(id_usuario)
-        if usuario_cadastrado is None:
-            raise HTTPException(status_code=401, detail="Usuário não encontrado.")
+        self.pesquisar_usuario(id_usuario)
         usuario_repositoy.alterar_informacoes_usuario(id_usuario, usuario)
+        experiencia_usuario_service = ExperienciaIdiomaUsuarioService(self.db)
+        experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario.id_idioma, id_usuario, usuario.id_experiencia_idioma)
+        objetivo_usuario_service = ObjetivoUsuarioService(self.db)
+        objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario.id_objetivo)
 
+    def pesquisar_dados_usuario(self, id_usuario):
+        usuario_repositoy = UsuarioRepository(self.db)
+        dados_usuario = usuario_repositoy.buscar_dados_usuario(id_usuario)
+        idiomas_usuario = usuario_repositoy.buscar_idioma_usuario(id_usuario)
+        objetivos_usuario = usuario_repositoy.buscar_objetivos_usuario(id_usuario)
+        dados_usuario.usuario_experiencia_idioma = idiomas_usuario
+        dados_usuario.objetivos_usuario = objetivos_usuario
+        return dados_usuario
   
             
         

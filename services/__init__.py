@@ -4,3 +4,4 @@ from .validacao import ValidacaoService
 from .senha import SenhaService
 from .autenticacao import AutenticacaoService
 from .experiencia_idioma_usuario import ExperienciaIdiomaUsuarioService
+from .objetivo_usuario import ObjetivoUsuarioService

@@ -21,6 +21,8 @@ class UsuarioResponse(BaseModel):
 
 
 class UsuarioInfosCreate(BaseModel):
+    id_idioma: int
+    id_experiencia_idioma: int 
     id_objetivo: int
     id_disponibilidade: int
     data_nascimento: DateTime
@@ -28,3 +30,10 @@ class UsuarioInfosCreate(BaseModel):
 class UsuarioIdiomaDto(BaseModel):
     id_idioma: int
     id_experiencia_idioma: int 
+
+class UsuarioResponse(BaseModel):
+    email: EmailStr
+    data_nascimento: DateTime
+    experiencia_idioma_descricao: str
+    objetivo_descricao: str
+    disponibilidade_descricao: str

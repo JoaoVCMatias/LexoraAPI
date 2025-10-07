@@ -5,6 +5,10 @@ class ExperienciaIdiomaUsuarioRepository:
     def __init__(self, db: Session):
         self.db = db
     
+    def pesquisar_experiencia_idioma_usuario(self, id_usuario):
+        experiencia_cadastrada = self.db.query(ExperienciaIdiomaUsuario).filter(ExperienciaIdiomaUsuario.id_usuario == id_usuario).first()
+        return experiencia_cadastrada
+    
     def inserir_experiencia_idioma_usuario(self, experiencia_idioma_usuario: ExperienciaIdiomaUsuario):
         self.db.add(experiencia_idioma_usuario)
         self.db.commit()
