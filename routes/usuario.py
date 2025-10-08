@@ -21,8 +21,8 @@ def pesquisar_usuario_logado(credentials: HTTPAuthorizationCredentials = Depends
     service = UsuarioService(db)
     token = credentials.credentials
     id_usuario = AutenticacaoService.token_to_id_usuario(token)
-    result = service.pesquisar_dados_usuario(id_usuario)
-    return json.dumps(result)
+    result = service.pesquisar_usuario_logado(id_usuario)
+    return result
 
 @router.post("/Login")
 def login_usuario(usuario: UsuarioAutentication, db: Session = Depends(get_db)):
@@ -51,7 +51,7 @@ def pesquisar_usuario_informacao(credentials: HTTPAuthorizationCredentials = Dep
     token = credentials.credentials
     id_usuario = AutenticacaoService.token_to_id_usuario(token)
     service = UsuarioService(db)
-    dados = service.pesquisar_dados_usuario(id_usuario)
+    dados = service.pesquisar_usuario_info(id_usuario)
     return dados
 
 @router.post("/Usuario/IdiomaExperiencia")

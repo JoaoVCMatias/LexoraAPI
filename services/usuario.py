@@ -66,13 +66,18 @@ class UsuarioService:
         objetivo_usuario_service = ObjetivoUsuarioService(self.db)
         objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario.id_objetivo)
 
-    def pesquisar_dados_usuario(self, id_usuario):
+    def pesquisar_usuario_info(self, id_usuario):
         usuario_repositoy = UsuarioRepository(self.db)
         dados_usuario = usuario_repositoy.buscar_dados_usuario(id_usuario)
         idiomas_usuario = usuario_repositoy.buscar_idioma_usuario(id_usuario)
         objetivos_usuario = usuario_repositoy.buscar_objetivos_usuario(id_usuario)
         dados_usuario.usuario_experiencia_idioma = idiomas_usuario
         dados_usuario.objetivos_usuario = objetivos_usuario
+        return dados_usuario
+    
+    def pesquisar_usuario_logado(self, id_usuario):
+        usuario_repositoy = UsuarioRepository(self.db)
+        dados_usuario = usuario_repositoy.buscar_dados_usuario(id_usuario)
         return dados_usuario
   
             
@@ -89,6 +94,8 @@ class UsuarioService:
     
     def validar_autenticacao(self, usuario : UsuarioAutentication):
         usuarioCadastrado = self.db.query(Usuario).filter(Usuario.email == usuario.email).first()
+        if(usuarioCadastrado is None):
+            raise HTTPException(status_code=401, detail="Credenciais inválidas. Verifique seu e-mail e senha.")
         senhaService = SenhaService()
 
         comparacaoSenha = senhaService.Compare(usuario.senha, usuarioCadastrado.senha)
