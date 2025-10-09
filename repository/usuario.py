@@ -22,7 +22,7 @@ class UsuarioRepository:
         row = self.db.execute(text("""
             SELECT u.id_usuario, u.nome, u.data_nascimento, u.email, d.descricao_disponibilidade
             FROM usuario u
-            INNER JOIN disponibilidade d ON d.id_disponibilidade = u.id_disponibilidade
+            LEFT JOIN disponibilidade d ON d.id_disponibilidade = u.id_disponibilidade
             WHERE u.id_usuario = :id
         """), {"id": id_usuario}).first()
 
@@ -40,11 +40,11 @@ class UsuarioRepository:
         row = self.db.execute(text(""" 
             select eiu.id_experiencia_idioma_usuario, eiu.id_idioma, i.descricao_idioma , ei.id_experiencia_idioma, ei.descricao_experiencia_idioma   
             from experiencia_idioma_usuario eiu 
-            inner join experiencia_idioma ei 
+            left join experiencia_idioma ei 
 	            on ei.id_experiencia_idioma  = eiu.id_experiencia_idioma 
-            inner join idioma i 
+            left join idioma i 
 	        on i.id_idioma = eiu.id_idioma 
-            inner join usuario u 
+            left join usuario u 
 	        on u.id_usuario  = eiu.id_usuario
             where u.id_usuario = :id"""), {"id": id_usuario}).first()
         if row:
