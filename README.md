@@ -13,7 +13,7 @@ cd seu-projeto
 1. Crie e ative o ambiente virtual
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
-.venv\Scripts\activate     # Windows
+.venv\Scripts\activate.ps1     # Windows
 
 2. Instale as dependências
 pip install -r requirements.txt
