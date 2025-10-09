@@ -94,7 +94,8 @@ class UsuarioService:
     
     def validar_autenticacao(self, usuario : UsuarioAutentication):
         usuarioCadastrado = self.db.query(Usuario).filter(Usuario.email == usuario.email).first()
-        if(usuarioCadastrado is None):
+ 
+        if usuarioCadastrado is None:
             raise HTTPException(status_code=401, detail="Credenciais inválidas. Verifique seu e-mail e senha.")
         senhaService = SenhaService()
 

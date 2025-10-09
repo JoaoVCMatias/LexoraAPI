@@ -6,6 +6,9 @@ from schemas.usuario_token import UsuarioTokenCreate
 from models.usuario_token import UsuarioToken
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+from fastapi import Request
 
 class AutenticacaoService:
 
@@ -32,8 +35,10 @@ class AutenticacaoService:
         self.db.commit()
         self.db.refresh(novo_token)
 
-    def buscar_token(self, id_usuario_login: int):
-        usuario_token_cadastrado = self.db.query(UsuarioToken).filter(id_usuario = id_usuario_login).first()
+    def buscar_token(self, id_usuario_login: int) -> str | None:
+        usuario_token_cadastrado = self.db.query(UsuarioToken).filter(UsuarioToken.id_usuario == id_usuario_login).first()
+        if usuario_token_cadastrado is None:
+            return None
         return usuario_token_cadastrado.token
     
     def delata_token_por_id(self, id_usuario: int):
@@ -62,12 +67,13 @@ class AutenticacaoService:
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             token_cadastrado =self.buscar_token(payload.get("id_usuario"))
+            print(token_cadastrado)
             if token_cadastrado is None:
                 return HTTPException(
                 status_code=403,
                 detail="Token inválido!"
                 )
-            return payload  # retorna os dados do token se válido
+            #return payload  # retorna os dados do token se válido
         except jwt.ExpiredSignatureError:
             raise HTTPException(
                 status_code=401,
