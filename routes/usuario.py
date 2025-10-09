@@ -87,5 +87,6 @@ def alterar_idioma_experiencia(id_experiencia_idioma_usuario: int, id_experienci
     if isinstance(validacao, HTTPException):
         return validacao
     service = ExperienciaIdiomaUsuarioService(db)
+    id_usuario = AutenticacaoService.token_to_id_usuario(token)
     service.alterar_experiencia_idioma_usuario(id_experiencia_idioma_usuario, id_usuario, id_experiencia_idioma)
     return json.dumps(1)
