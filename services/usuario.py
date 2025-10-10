@@ -79,18 +79,6 @@ class UsuarioService:
         usuario_repositoy = UsuarioRepository(self.db)
         dados_usuario = usuario_repositoy.buscar_dados_usuario(id_usuario)
         return dados_usuario
-  
-            
-        
-        
-    
-    #def buscar_usuario_token(self, token: str):
-    #    id_usuario = AutenticacaoService.token_to_id_usuario(token)
-    #    self.db.query(Usuario)
-    #    self.db.commit()
-    #    token = self.gerar_token(novo_usuario.id_usuario)
-    #    self.salvar_token(novo_usuario, token)
-    #    return token
     
     def validar_autenticacao(self, usuario : UsuarioAutentication):
         usuarioCadastrado = self.db.query(Usuario).filter(Usuario.email == usuario.email).first()
