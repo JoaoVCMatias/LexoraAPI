@@ -33,7 +33,7 @@ class EmailService:
         if email_confirmacao is not None:
             self.deletar_codigo_email(email_confirmacao.id_email_confirmacao)
             
-        self.enviar_email(id_usuario)
+        return self.enviar_email(id_usuario)
 
     def validar_email(self, id_usuario: int, codigo: int):
         usuario = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
