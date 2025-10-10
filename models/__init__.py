@@ -6,6 +6,8 @@ from .objetivo import Objetivo
 from .tipo_questao import TipoQuestao
 from .experiencia_idioma import ExperienciaIdioma
 from .palavra import Palavra
+from .tipo_variacao_palavra import TipoVariacaoPalavra
+
 # Tabelas dependentes
 from .usuario import Usuario
 from .objetivo_usuario import ObjetivoUsuario
@@ -17,3 +19,4 @@ from .email_confirmacao import EmailConfirmacao
 from .experiencia_idioma_usuario import ExperienciaIdiomaUsuario
 from .usuario_token import UsuarioToken
 from .palavra_objetivo import PalavreObjetivo
+from .variacao_palavra import VariacaoPalavra
