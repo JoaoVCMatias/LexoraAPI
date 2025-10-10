@@ -19,6 +19,7 @@ class EmailService:
         usuario = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         codigo = random.randint(100000, 999999)
         mensagem = EmailHtml.envio_codigo_verificacao(str(codigo))
+        print(EMAIL, PASS_WORD_EMAIL)
         smtp_service = SMTPService(EMAIL, PASS_WORD_EMAIL)
         smtp_service.enviar_email(usuario.email, "Código de acesso", mensagem)
         email = EmailConfirmacao(id_usuario = id_usuario, codigo = codigo)
@@ -29,6 +30,7 @@ class EmailService:
 
 
     def enviar_codigo_email(self, id_usuario: int):
+        print("enviar_codigo_email")
         email_confirmacao = self.db.query(EmailConfirmacao).filter(EmailConfirmacao.id_usuario == id_usuario).first()
         if email_confirmacao is not None:
             self.deletar_codigo_email(email_confirmacao.id_email_confirmacao)
@@ -36,12 +38,12 @@ class EmailService:
         return self.enviar_email(id_usuario)
 
     def validar_email(self, id_usuario: int, codigo: int):
+        print("Validar_email")
         usuario = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         
         if(usuario.cadastro_completo == True):
             print("cadastro já completo")
             return 1
-        print(codigo)
         usuario_codigo = self.db.query(EmailConfirmacao).filter(EmailConfirmacao.id_usuario == id_usuario).first()
         if(usuario_codigo.codigo != codigo):
             return 0
