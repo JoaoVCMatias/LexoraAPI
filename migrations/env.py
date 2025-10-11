@@ -6,7 +6,7 @@ from database import Base, DATABASE_URL  # só Base e URL
 from models import *  # importa todas as models
 
 target_metadata = Base.metadata
-
+print(DATABASE_URL)
 config = context.config
 fileConfig(config.config_file_name)
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
