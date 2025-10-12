@@ -31,17 +31,16 @@ class EmailService:
         #mensagem = EmailHtml.envio_codigo_verificacao(str("454545"))
         #m = MailerSendeService(EMAIL, "lexora")
         #m.enviar_email("João", "joaovcmatias@gmail.com", "código email", mensagem)
-        print("teste")
-        MailTrapService.teste()
+        #MailTrapService.teste()
         return 1 
 
 
     def enviar_codigo_email(self, id_usuario: int):
-        print("enviar_codigo_email")
-        email_confirmacao = self.db.query(EmailConfirmacao).filter(EmailConfirmacao.id_usuario == id_usuario).first()
-        if email_confirmacao is not None:
-            self.deletar_codigo_email(email_confirmacao.id_email_confirmacao)
-            
+        #print("enviar_codigo_email")
+        #email_confirmacao = self.db.query(EmailConfirmacao).filter(EmailConfirmacao.id_usuario == id_usuario).first()
+        #if email_confirmacao is not None:
+        #    self.deletar_codigo_email(email_confirmacao.id_email_confirmacao)
+        #    
         return self.enviar_email(id_usuario)
 
     def validar_email(self, id_usuario: int, codigo: int):
@@ -51,9 +50,9 @@ class EmailService:
         if(usuario.cadastro_completo == True):
             print("cadastro já completo")
             return 1
-        usuario_codigo = self.db.query(EmailConfirmacao).filter(EmailConfirmacao.id_usuario == id_usuario).first()
-        if(usuario_codigo.codigo != codigo):
-            return 0
+        #usuario_codigo = self.db.query(EmailConfirmacao).filter(EmailConfirmacao.id_usuario == id_usuario).first()
+        #if(usuario_codigo.codigo != codigo):
+        #    return 0
         usuario.cadastro_completo = 1
         self.db.commit()
         self.db.refresh(usuario)
