@@ -30,6 +30,10 @@ class UsuarioService:
         if usuario_cadastrado is None:
             raise HTTPException(status_code=401, detail="Usuário não encontrado.")
         return usuario_cadastrado
+    
+    def pesquisar_usuario_status(self, id_usuario: int):
+        usuario = self.pesquisar_usuario(id_usuario)
+        return usuario.cadastro_completo
         
     @staticmethod
     def gerar_hash_senha(senha : str) -> bytes:

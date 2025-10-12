@@ -90,3 +90,15 @@ def alterar_idioma_experiencia(id_experiencia_idioma_usuario: int, id_experienci
     id_usuario = AutenticacaoService.token_to_id_usuario(token)
     service.alterar_experiencia_idioma_usuario(id_experiencia_idioma_usuario, id_usuario, id_experiencia_idioma)
     return json.dumps(1)
+
+@router.get("/Status")
+def pesquisar_usuario_status(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    service = UsuarioService(db)
+    token = credentials.credentials
+    autenticacao_service = AutenticacaoService(db)
+    validacao = autenticacao_service.validar_token(token)
+    if isinstance(validacao, HTTPException):
+        return validacao
+    id_usuario = autenticacao_service.token_to_id_usuario(token)
+    result = service.pesquisar_usuario_status(id_usuario)
+    return result
