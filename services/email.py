@@ -2,8 +2,10 @@ from sqlalchemy.orm import Session
 from models import EmailConfirmacao, Usuario
 import random
 from .SMTP import SMTPService
+#from config import PASS_WORD_EMAIL, EMAIL
+#from .external import MailerSendeService
+from .external import MailTrapService
 from html import EmailHtml
-from config import PASS_WORD_EMAIL, EMAIL
 
 class EmailService:
     
@@ -16,16 +18,21 @@ class EmailService:
         pass
 
     def enviar_email(self, id_usuario: int):
-        usuario = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
-        codigo = random.randint(100000, 999999)
-        mensagem = EmailHtml.envio_codigo_verificacao(str(codigo))
-        print(EMAIL, PASS_WORD_EMAIL)
-        smtp_service = SMTPService(EMAIL, PASS_WORD_EMAIL)
-        smtp_service.enviar_email(usuario.email, "Código de acesso", mensagem)
-        email = EmailConfirmacao(id_usuario = id_usuario, codigo = codigo)
-        self.db.add(email)
-        self.db.commit()
-        self.db.refresh(email)
+        #usuario = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
+        #codigo = random.randint(100000, 999999)
+        #mensagem = EmailHtml.envio_codigo_verificacao(str(codigo))
+        #print(EMAIL, PASS_WORD_EMAIL)
+        #smtp_service = SMTPService(EMAIL, PASS_WORD_EMAIL)
+        #smtp_service.enviar_email(usuario.email, "Código de acesso", mensagem)
+        #email = EmailConfirmacao(id_usuario = id_usuario, codigo = codigo)
+        #self.db.add(email)
+        #self.db.commit()
+        #self.db.refresh(email)
+        #mensagem = EmailHtml.envio_codigo_verificacao(str("454545"))
+        #m = MailerSendeService(EMAIL, "lexora")
+        #m.enviar_email("João", "joaovcmatias@gmail.com", "código email", mensagem)
+        print("teste")
+        MailTrapService.teste()
         return 1 
 
 
