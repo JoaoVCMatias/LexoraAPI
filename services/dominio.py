@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Sexo, Disponibilidade, ExperienciaIdioma, Idioma, Objetivo, TipoQuestao 
+from models import Sexo, Disponibilidade, ExperienciaIdioma, Idioma, Objetivo, TipoQuestao, Palavra
 from sqlalchemy.orm import Session
 
 class DominioService:
@@ -23,3 +23,6 @@ class DominioService:
     
     def buscar_tipo_questao(self):
         return self.db.query(TipoQuestao).all()
+    
+    def buscar_palavra(self):
+        return self.db.query(Palavra).all()

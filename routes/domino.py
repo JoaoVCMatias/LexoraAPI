@@ -42,3 +42,9 @@ def buscar_disponibilidade(db: Session = Depends(get_db)):
     result = service.buscar_disponibilidade()
     return result
 
+#@router.get("/Palavra")
+#def buscar_palavra(db: Session = Depends(get_db)):
+#    service = DominioService(db)
+#    result = service.buscar_palavra()
+#    return result
+
