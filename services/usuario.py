@@ -101,6 +101,15 @@ class UsuarioService:
         token = self.gerar_token(usuarioCadastrado.id_usuario)
         self.salvar_token(usuarioCadastrado, token)
         return token
+    
+    def alterar_senha(self, senha: str, id_usuario: int):
+        hash_senha = self.gerar_hash_senha(senha)
+        usuarioCadastrado = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
+        usuarioCadastrado.senha = hash_senha
+        self.db.commit()
+        self.db.refresh(usuarioCadastrado)
+        return 1
+
        
 
     

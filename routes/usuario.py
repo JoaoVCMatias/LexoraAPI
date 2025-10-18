@@ -102,3 +102,15 @@ def pesquisar_usuario_status(credentials: HTTPAuthorizationCredentials = Depends
     id_usuario = autenticacao_service.token_to_id_usuario(token)
     result = service.pesquisar_usuario_status(id_usuario)
     return result
+
+@router.put("/Senha")
+def alterar_senha_usuario(senha: str, credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    service = UsuarioService(db)
+    token = credentials.credentials
+    autenticacao_service = AutenticacaoService(db)
+    validacao = autenticacao_service.validar_token(token)
+    if isinstance(validacao, HTTPException):
+        return validacao
+    id_usuario = autenticacao_service.token_to_id_usuario(token)
+    result = service.alterar_senha(senha, id_usuario)
+    return result
