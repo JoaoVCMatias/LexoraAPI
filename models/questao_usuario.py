@@ -7,7 +7,7 @@ class QuestaoUsuario(Base):
 
     id_questaousuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
     acerto = Column(Boolean)
-    data_resposta = Column(String(3))
+    data_resposta = Column(DateTime)
     id_questao = Column(Integer, ForeignKey("questao.id_questao"), nullable=False)
     id_usuario = Column(Integer, ForeignKey("usuario.id_usuario"), nullable=False)
     id_conjunto_questao = Column(Integer, ForeignKey("conjunto_questao.id_conjunto_questao"), nullable=False)
