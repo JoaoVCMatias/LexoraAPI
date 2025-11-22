@@ -32,7 +32,7 @@ class QuestaoService:
         if not usuario:
             return HTTPException(status_code=404, detail="Usuário não encontrado.")
         
-        questoes_usuario = QuestaoRepository.buscar_questoes_usuario(self, id_usuario).questoes
+        questoes_usuario = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, None).questoes
         conclusao = sum(1 for questao in questoes_usuario if questao.acerto is None) == 1 
 
         questao = QuestaoRepository.buscar_questao_por_id(self, id_questao)
