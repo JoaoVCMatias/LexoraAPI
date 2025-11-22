@@ -45,6 +45,8 @@ class QuestaoService:
         print(alterenativas_questao)
         if alterenativas_questao[alternariva] is None:
             raise HTTPException(status_code=400, detail="Alternativa inválida.")
+        if questao.resposta not in alterenativas_questao.values():
+            raise HTTPException(status_code=400, detail="Resposta correta inválida.")
         elif alterenativas_questao[alternariva] != questao.resposta:
             correta = False
         
@@ -52,7 +54,7 @@ class QuestaoService:
         
         data_resposta = datetime.now()
 
-        QuestaoRepository.responder_questao(self, id_usuario, id_questao, correta, id_conjunto_questao, data_resposta)
+        QuestaoRepository.responder_questao(self, id_usuario, id_questao, correta, questao.resposta, id_conjunto_questao, data_resposta)
         if conclusao:
             QuestaoRepository.concluir_conjunto_questoes(self, id_conjunto_questao, data_resposta)
 
