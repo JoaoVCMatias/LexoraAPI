@@ -117,7 +117,7 @@ class QuestaoRepository:
         self.db.execute(text("""
             UPDATE questao_usuario
             SET acerto = :acerto,
-                data_resposta = :data_resposta
+                data_resposta = :data_resposta,
                 resposta_usuario = :resposta_usuario
             WHERE id_usuario = :id_usuario
             AND id_questao = :id_questao
