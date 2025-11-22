@@ -13,7 +13,7 @@ class QuestaoService:
 
     def buscar_questoes_usuario(self, id_usuario: int):
         print(id_usuario)
-        return QuestaoRepository.buscar_questoes_usuario(self, id_usuario)
+        return QuestaoRepository.buscar_questoes_usuario(self, id_usuario, None)
     
     def gerar_questao_id(self, id_usuario: int):
         questoes_usuario = self.buscar_questoes_usuario(id_usuario)
