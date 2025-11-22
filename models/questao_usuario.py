@@ -5,7 +5,7 @@ from sqlalchemy import Identity
 class QuestaoUsuario(Base):
     __tablename__ = "questao_usuario"
 
-    id_questaousuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
+    id_questao_usuario = Column(Integer, primary_key=True, server_default=Identity(start=1))
     acerto = Column(Boolean)
     data_resposta = Column(DateTime)
     id_questao = Column(Integer, ForeignKey("questao.id_questao"), nullable=False)
