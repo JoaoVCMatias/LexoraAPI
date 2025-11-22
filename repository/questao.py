@@ -79,7 +79,8 @@ class QuestaoRepository:
                 CASE 
 		            WHEN qu.acerto IS NOT NULL THEN q.resposta
 		            ELSE NULL
-	            END AS resposta
+	            END AS resposta,
+                qu.resposta_usuario
             FROM conjunto_questao cq 
             INNER JOIN questao_usuario qu 
                 ON qu.id_usuario = cq.id_usuario 
@@ -102,7 +103,8 @@ class QuestaoRepository:
                     descricao_questao=row.descricao_questao,
                     json_opcao=row.json_opcao,
                     acerto=row.acerto,
-                    resposta=row.resposta
+                    resposta=row.resposta,
+                    resposta_usuario=row.resposta_usuario
                 )
                 for row in rows
             ]
@@ -110,17 +112,18 @@ class QuestaoRepository:
 
         return conjunto
     
-    def responder_questao(self, id_usuario: int, id_questao: int, correta: bool, id_conjunto_questao: int, data_resposta: date):
+    def responder_questao(self, id_usuario: int, id_questao: int, correta: bool, resposta_usuario: str, id_conjunto_questao: int, data_resposta: date):
         print("id_usuario:", id_usuario, "id_questao:", id_questao, "correta:", correta, "id_conjunto_questao:", id_conjunto_questao)
         self.db.execute(text("""
             UPDATE questao_usuario
             SET acerto = :acerto,
                 data_resposta = :data_resposta
+                resposta_usuario = :resposta_usuario
             WHERE id_usuario = :id_usuario
             AND id_questao = :id_questao
             AND id_conjunto_questao = :id_conjunto_questao
             AND data_resposta IS NULL
-        """), {"acerto": correta, "data_resposta": data_resposta, "id_usuario": id_usuario, "id_questao": id_questao, "id_conjunto_questao": id_conjunto_questao})
+        """), {"acerto": correta, "resposta_usuario": resposta_usuario, "data_resposta": data_resposta, "id_usuario": id_usuario, "id_questao": id_questao, "id_conjunto_questao": id_conjunto_questao})
         self.db.commit()    
 
     def concluir_conjunto_questoes(self, id_conjunto_questao: int, data_conclusao: date):

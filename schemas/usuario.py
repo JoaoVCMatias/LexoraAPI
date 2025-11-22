@@ -45,6 +45,7 @@ class QuestoesUsuarioResponse(BaseModel):
     json_opcao: str
     acerto: bool | None = None
     resposta: str | None = None
+    resposta_usuario: str | None = None
 
 class UsuarioQuestaoReturn(BaseModel):
     id_conjunto_questao: int
