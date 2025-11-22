@@ -44,10 +44,19 @@ class QuestoesUsuarioResponse(BaseModel):
     descricao_questao: str
     json_opcao: str
     acerto: bool | None = None
+    resposta: str | None = None
 
 class UsuarioQuestaoReturn(BaseModel):
     id_conjunto_questao: int
     questoes: List[QuestoesUsuarioResponse] = Field(default_factory=list)
+
+class RelatorioDesempenhoUsuarioResponse(BaseModel):
+    questoes: List[UsuarioQuestaoReturn] = Field(default_factory=list)
+    id_conjunto_questao: int
+    tempo: str
+    pontos: float
+    porcentagem_acerto: float
+    sequencia_acerto: int
 
 
 

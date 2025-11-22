@@ -30,7 +30,7 @@ class QuestaoService:
     def responder_questao(self, id_usuario: int, id_questao: int, alternariva: int, id_conjunto_questao: int):
         usuario = UsuarioRepository.buscar_usuario_por_id(self, id_usuario)
         if not usuario:
-            return {"erro": "Usuário não encontrado."}
+            return HTTPException(status_code=404, detail="Usuário não encontrado.")
         
         questoes_usuario = QuestaoRepository.buscar_questoes_usuario(self, id_usuario).questoes
         conclusao = sum(1 for questao in questoes_usuario if questao.acerto is None) == 1 
@@ -57,5 +57,12 @@ class QuestaoService:
             QuestaoRepository.concluir_conjunto_questoes(self, id_conjunto_questao, data_resposta)
 
         return correta 
+    
+    def gerar_relatorio_questoes_usuario(self, id_usuario: int):
+        relatorio = QuestaoRepository.relatorio_desenpenho_usuario(self, id_usuario)
+        for r in relatorio:
+            questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, r.id_conjunto_questao)
+            r.questoes.append(questoes) 
+        return relatorio
 
     

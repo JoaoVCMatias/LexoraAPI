@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from datetime import date
-from schemas.usuario import UsuarioQuestaoReturn, QuestoesUsuarioResponse
+from schemas.usuario import UsuarioQuestaoReturn, QuestoesUsuarioResponse, RelatorioDesempenhoUsuarioResponse
 from models.questao import Questao
 
 class QuestaoRepository:
@@ -68,15 +68,18 @@ class QuestaoRepository:
             """), {"id_usuario": id_usuario, "id_questao": id_questao,  "id_conjunto": id_conjunto, "data_criacao": data_criacao})
         self.db.commit()
 
-    def buscar_questoes_usuario(self, id_usuario: int) -> UsuarioQuestaoReturn | None:
-        print(id_usuario)
-        rows = self.db.execute(text("""
+    def buscar_questoes_usuario(self, id_usuario: int, id_conjunto_questao: int|None) -> UsuarioQuestaoReturn | None:
+        rows = self.db.execute(text(f"""
             SELECT 
                 cq.id_conjunto_questao, 
                 q.id_questao, 
                 q.descricao_questao,                  
                 q.json_opcao, 
-                qu.acerto 
+                qu.acerto,
+                CASE 
+		            WHEN qu.acerto IS NOT NULL THEN q.resposta
+		            ELSE NULL
+	            END AS resposta
             FROM conjunto_questao cq 
             INNER JOIN questao_usuario qu 
                 ON qu.id_usuario = cq.id_usuario 
@@ -84,8 +87,9 @@ class QuestaoRepository:
             INNER JOIN questao q 
                 ON q.id_questao = qu.id_questao 
             WHERE cq.id_usuario = :id_usuario
-            AND cq.data_conclusao IS NULL
-        """), {"id_usuario": id_usuario}).all()
+            {f"AND cq.id_conjunto_questao = :id_conjunto_questao" if id_conjunto_questao is not None else "AND cq.data_conclusao IS NULL"}
+            ORDER BY cq.id_conjunto_questao, q.id_questao
+        """), {"id_usuario": id_usuario, "id_conjunto_questao": id_conjunto_questao}).all()
 
         if not rows:
             return None
@@ -97,7 +101,8 @@ class QuestaoRepository:
                     id_questao=row.id_questao,
                     descricao_questao=row.descricao_questao,
                     json_opcao=row.json_opcao,
-                    acerto=row.acerto
+                    acerto=row.acerto,
+                    resposta=row.resposta
                 )
                 for row in rows
             ]
@@ -126,4 +131,66 @@ class QuestaoRepository:
             AND data_conclusao IS NULL
         """), {"id_conjunto_questao": id_conjunto_questao, "data_conclusao": data_conclusao})
         self.db.commit()
+
+    def relatorio_desenpenho_usuario(self, id_usuario: int) -> list[RelatorioDesempenhoUsuarioResponse] | None:
+        rows = self.db.execute(text("""
+            ;WITH ConjuntoQuestaoUsuario AS (
+	            SELECT 
+	            	MAX(cq.id_conjunto_questao) AS id_conjunto_questao 
+	            FROM conjunto_questao cq 
+	            WHERE cq.id_usuario = :id_usuario 
+	            AND cq.data_conclusao IS NOT NULL
+            ), Sequencias AS (
+                SELECT qu.id_questaousuario, qu.acerto,
+                       SUM(CASE WHEN qu.acerto  = FALSE THEN 1 ELSE 0 END) 
+                           OVER (ORDER BY qu.id_questaousuario) AS grupo
+                FROM questao_usuario qu 
+                INNER JOIN ConjuntoQuestaoUsuario CQU
+                	ON CQU.id_conjunto_questao  = QU.id_conjunto_questao 
+            ), MaiorSequencia AS (
+            	SELECT MAX(contagem) AS maior_sequencia
+            	FROM (
+                	SELECT grupo, COUNT(*) AS contagem
+                	FROM Sequencias
+                	WHERE acerto = TRUE
+                	GROUP BY grupo
+            	) sub
+            )
+            SELECT 
+                cqu.id_conjunto_questao,
+            	AGE(cq.data_conclusao, cq.data_criacao) AS tempo,
+            	SUM(q.nivel * 100) AS pontos,
+            	(CAST(SUM(CASE WHEN qu.acerto = TRUE THEN 1 ELSE 0 END) AS DECIMAL) / CAST(COUNT(qu.id_questao) AS DECIMAL)) * 100 
+            	AS porcentagem_acerto,
+            	(SELECT maior_sequencia FROM MaiorSequencia) AS sequencia_acerto
+            FROM ConjuntoQuestaoUsuario cqu
+            INNER JOIN conjunto_questao cq 
+            	ON cq.id_conjunto_questao = cqu.id_conjunto_questao
+            INNER JOIN questao_usuario qu 
+            	ON qu.id_conjunto_questao  = cqu.id_conjunto_questao
+            LEFT JOIN questao q 
+            	ON q.id_questao = qu.id_questao
+            	AND QU.acerto = TRUE
+            GROUP BY 
+                cqu.id_conjunto_questao,                        
+            	cq.data_criacao,
+            	cq.data_conclusao
+        """), {"id_usuario": id_usuario}).all()
+
+        if not rows:
+            return None
+        
+        relatorio = []
+        for row in rows:
+            relatorio.append(
+                RelatorioDesempenhoUsuarioResponse(
+                    id_conjunto_questao=row.id_conjunto_questao,
+                    tempo=str(row.tempo),
+                    pontos=float(row.pontos),
+                    porcentagem_acerto=float(row.porcentagem_acerto),
+                    sequencia_acerto=int(row.sequencia_acerto),
+                    questoes=[] 
+                )
+            )
+        return relatorio
     
