@@ -141,9 +141,9 @@ class QuestaoRepository:
 	            WHERE cq.id_usuario = :id_usuario 
 	            AND cq.data_conclusao IS NOT NULL
             ), Sequencias AS (
-                SELECT qu.id_questaousuario, qu.acerto,
+                SELECT qu.id_questao_usuario, qu.acerto,
                        SUM(CASE WHEN qu.acerto  = FALSE THEN 1 ELSE 0 END) 
-                           OVER (ORDER BY qu.id_questaousuario) AS grupo
+                           OVER (ORDER BY qu.id_questao_usuario) AS grupo
                 FROM questao_usuario qu 
                 INNER JOIN ConjuntoQuestaoUsuario CQU
                 	ON CQU.id_conjunto_questao  = QU.id_conjunto_questao 
