@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime as DateTime
+from typing import List
 
 class UsuarioCreate(BaseModel):
     nome: str
@@ -37,3 +38,16 @@ class UsuarioResponse(BaseModel):
     experiencia_idioma_descricao: str
     objetivo_descricao: str
     disponibilidade_descricao: str
+
+class QuestoesUsuarioResponse(BaseModel):
+    id_questao: int
+    descricao_questao: str
+    json_opcao: str
+    acerto: bool | None = None
+
+class UsuarioQuestaoReturn(BaseModel):
+    id_conjunto_questao: int
+    questoes: List[QuestoesUsuarioResponse] = Field(default_factory=list)
+
+
+
