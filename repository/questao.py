@@ -162,7 +162,7 @@ class QuestaoRepository:
             SELECT 
                 cqu.id_conjunto_questao,
             	AGE(cq.data_conclusao, cq.data_criacao) AS tempo,
-            	SUM(q.nivel * 100) AS pontos,
+            	COALESCE(SUM(q.nivel * 100), 0) AS pontos,
             	(CAST(SUM(CASE WHEN qu.acerto = TRUE THEN 1 ELSE 0 END) AS DECIMAL) / CAST(COUNT(qu.id_questao) AS DECIMAL)) * 100 
             	AS porcentagem_acerto,
             	(SELECT maior_sequencia FROM MaiorSequencia) AS sequencia_acerto

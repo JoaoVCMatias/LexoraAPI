@@ -48,8 +48,6 @@ class QuestaoService:
         elif alterenativas_questao[alternariva] != questao.resposta:
             correta = False
         
-        print(alterenativas_questao[alternariva], questao.resposta)
-        
         data_resposta = datetime.now()
 
         QuestaoRepository.responder_questao(self, id_usuario, id_questao, correta, alterenativas_questao[alternariva], id_conjunto_questao, data_resposta)
