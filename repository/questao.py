@@ -165,7 +165,7 @@ class QuestaoRepository:
             	COALESCE(SUM(q.nivel * 100), 0) AS pontos,
             	(CAST(SUM(CASE WHEN qu.acerto = TRUE THEN 1 ELSE 0 END) AS DECIMAL) / CAST(COUNT(qu.id_questao) AS DECIMAL)) * 100 
             	AS porcentagem_acerto,
-            	COALESCE(SELECT maior_sequencia FROM MaiorSequencia), 0) AS sequencia_acerto
+            	COALESCE((SELECT maior_sequencia FROM MaiorSequencia), 0) AS sequencia_acerto
             FROM ConjuntoQuestaoUsuario cqu
             INNER JOIN conjunto_questao cq 
             	ON cq.id_conjunto_questao = cqu.id_conjunto_questao
