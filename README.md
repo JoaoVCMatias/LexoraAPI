@@ -16,7 +16,7 @@ pip install -r requirements.txt
 configure o  database.py
 alembic upgrade head
 
-### 4.Execute a aplicação
+### 4. Execute a aplicação
 uvicorn main:app --reload
 
 ### 5. Acesse o sistema 
