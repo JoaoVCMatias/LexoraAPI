@@ -19,7 +19,7 @@ alembic upgrade head
 ### 4.Execute a aplicação
 uvicorn main:app --reload
 
-### 5.
+### 5. Acesse o sistema 
 Acesse http://127.0.0.1:8000/docs
 
 
