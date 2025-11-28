@@ -7,6 +7,7 @@ Projeto de API do Lexora
 ### 1. Crie e ative o ambiente virtual
 python -m venv .venv
 source .venv/bin/activate  # Linux/macOS
+
 .venv\Scripts\activate.ps1     # Windows
 
 ### 2. Instale as dependências
