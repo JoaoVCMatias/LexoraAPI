@@ -84,7 +84,7 @@ class UsuarioRepository:
 
     def alterar_informacoes_usuario(self, id_usuario: int, usuario_alteracao: UsuarioInfosCreate):
         usuario_cadastrado = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
-        usuario_cadastrado.id_idiomamaterno = 1
+        usuario_cadastrado.id_idioma_materno = 1
         usuario_cadastrado.id_disponibilidade = usuario_alteracao.id_disponibilidade
         usuario_cadastrado.data_nascimento = usuario_alteracao.data_nascimento
         self.db.commit()

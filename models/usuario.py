@@ -12,7 +12,7 @@ class Usuario(Base):
     email = Column(String(255), nullable=False)
     senha = Column(LargeBinary, nullable=False)
     id_disponibilidade = Column(Integer, ForeignKey("disponibilidade.id_disponibilidade"), nullable=True)
-    id_idiomamaterno = Column(Integer, ForeignKey("idioma.id_idioma"), nullable=True)
+    id_idioma_materno = Column(Integer, ForeignKey("idioma.id_idioma"), nullable=True)
     cadastro_completo = Column(Boolean, nullable=False)
     ativo = Column(Boolean)
     data_ultimo_acesso = Column(DateTime, nullable=False)
