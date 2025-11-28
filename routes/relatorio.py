@@ -10,8 +10,8 @@ from fastapi import Depends, HTTPException, status
 router = APIRouter(prefix="/relatorio", tags=["relatorios"])
 security = HTTPBearer() 
 
-@router.get("/estatisticaUsuario")
-def pesquisar_usuario_logado(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+@router.get("/EstatisticaUsuario")
+def pesquisar_estatistica_usuario(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     service = UsuarioService(db)
     token = credentials.credentials
     autenticacao_service = AutenticacaoService(db)
@@ -23,7 +23,7 @@ def pesquisar_usuario_logado(credentials: HTTPAuthorizationCredentials = Depends
     result = service.buscar_relatorio_estatistica_usuario(id_usuario)
     return result
 
-@router.get("/dataUsuario")
+@router.get("/DataUsuario")
 def relatorio_data_usuario(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     service = UsuarioService(db)
     token = credentials.credentials
@@ -36,7 +36,7 @@ def relatorio_data_usuario(credentials: HTTPAuthorizationCredentials = Depends(s
     result = service.buscar_relatorio_data_usuario(id_usuario)
     return result
 
-@router.get("/atividadeUsuario")
+@router.get("/AtividadeUsuario")
 def relatorio_atividade_usuario(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
         service = UsuarioService(db)
         token = credentials.credentials
