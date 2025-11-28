@@ -1,3 +1,4 @@
 from .usuario import UsuarioRepository
 from .experiencia_idioma_usuario import ExperienciaIdiomaUsuarioRepository
 from .objetivo_usuario import ObjetivoUsuarioRepository
+from .relatorio import RelatorioRepository
