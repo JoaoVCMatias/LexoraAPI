@@ -120,6 +120,10 @@ class RelatorioRepository:
 	            )::date AS dia
             ), Data15Dias AS (
             	SELECT (current_date - INTERVAL '15 days')::date AS data_menos_15
+            ), DataUnion AS (
+            		SELECT dia FROM CalendarioMes
+            		UNION
+            		SELECT data_menos_15 AS dia FROM Data15Dias 
             ), CalcularPontos15 AS (
             	SELECT (cq.data_criacao::date) AS data, 
             	COALESCE(SUM(q.nivel * 100), 0) AS pontos
@@ -134,16 +138,16 @@ class RelatorioRepository:
             	WHERE cq.id_usuario  = :id_usuario
             	GROUP BY  cq.data_criacao
             )SELECT DISTINCT 
-            	cm.dia, 
+            	du.dia, 
             	CASE WHEN cq.data_conclusao IS NOT NULL THEN TRUE ELSE FALSE END AS Feito,
             	COALESCE(cp.pontos, 0) AS pontos 
-            FROM CalendarioMes cm
+            FROM DataUnion du
             LEFT JOIN conjunto_questao cq 
-            	ON cq.data_criacao = cm.dia 
+            	ON cq.data_criacao = du.dia 
             	AND cq.data_conclusao IS NOT NULL
             LEFT JOIN CalcularPontos15 cp
-            	ON cp.DATA = cm.dia 
-            ORDER BY cm.dia
+            	ON cp.DATA = du.dia 
+            ORDER BY du.dia
         """), {"id_usuario": id_usuario}).all()
 
         if row:
