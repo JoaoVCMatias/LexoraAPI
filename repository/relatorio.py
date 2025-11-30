@@ -235,6 +235,8 @@ class RelatorioRepository:
             WHERE fim_streak = NOW()::date
         """), {"id_usuario": id_usuario}).first()
         if row:
-		        return row.dias_consecutivos
+            ofensiva = {
+                "ofensiva": row.dias_consecutivos
+            }
         
     
