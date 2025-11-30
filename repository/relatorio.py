@@ -190,3 +190,51 @@ class RelatorioRepository:
                 atividades_feitas=row.atividades_realizadas
             )
         return None 
+    
+    def buscar_ofensiva_usuario(self, id_usuario: int) -> int | None:
+        row = self.db.execute(text("""
+            ;WITH datas AS (
+                -- Remover múltiplos registros no mesmo dia
+                SELECT DISTINCT 
+                    id_usuario,
+                    CAST(data_conclusao AS DATE) AS dia
+                FROM conjunto_questao
+                WHERE data_conclusao IS NOT NULL
+                AND id_usuario = :id_usuario
+            ), sequenciada AS (
+                -- Criar um grupo que identifica quebra de sequência
+                SELECT 
+                    id_usuario,
+                    dia,
+                    ROW_NUMBER() OVER (PARTITION BY id_usuario ORDER BY dia) AS rn
+                FROM datas
+            ), grupos AS (
+                -- Grupo de datas consecutivas
+                SELECT 
+                    id_usuario,
+                    dia,
+                    (dia - rn * INTERVAL '1 day') AS grupo
+                FROM sequenciada
+            ), grupo_ofensiva AS (
+                SELECT 
+                    id_usuario,
+                    MIN(dia) AS inicio_streak,
+                    MAX(dia) AS fim_streak,
+                    COUNT(*) AS dias_consecutivos
+                FROM grupos
+                GROUP BY 
+                    id_usuario,
+                    grupo
+                ORDER BY 
+                    id_usuario,
+                    inicio_streak
+            )
+            SELECT 
+                dias_consecutivos 
+            FROM grupo_ofensiva
+            WHERE fim_streak = NOW()::date
+        """), {"id_usuario": id_usuario}).first()
+        if row:
+		        return row.dias_consecutivos
+        
+    

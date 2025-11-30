@@ -22,3 +22,7 @@ class RelatorioService:
     def buscar_metas_usuario(self, id_usuario: int):
         relatorio = RelatorioRepository.buscar_metas_usuario(self, id_usuario)
         return relatorio
+    
+    def buscar_ofensiva_usuario(self, id_usuario: int): 
+        relatorio = RelatorioRepository.buscar_ofensiva_usuario(self, id_usuario)
+        return relatorio

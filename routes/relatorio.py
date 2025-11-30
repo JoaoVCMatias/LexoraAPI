@@ -48,3 +48,16 @@ def relatorio_atividade_usuario(credentials: HTTPAuthorizationCredentials = Depe
         id_usuario = autenticacao_service.token_to_id_usuario(token)
         result = service.buscar_metas_usuario(id_usuario)
         return result
+
+@router.get("/OfensivaUsuario")
+def relatorio_ofensiva_usuario(credentials: HTTPAuthorizationCredentials = Depends(security), db:   Session = Depends(get_db)):
+        service = UsuarioService(db)
+        token = credentials.credentials
+        autenticacao_service = AutenticacaoService(db)
+        service = RelatorioService(db)
+        validacao = autenticacao_service.validar_token(token)
+        if isinstance(validacao, HTTPException):
+            return validacao
+        id_usuario = autenticacao_service.token_to_id_usuario(token)
+        result = service.buscar_ofensiva_usuario(id_usuario)
+        return result
