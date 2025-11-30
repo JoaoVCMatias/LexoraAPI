@@ -191,7 +191,7 @@ class RelatorioRepository:
             )
         return None 
     
-    def buscar_ofensiva_usuario(self, id_usuario: int) -> int | None:
+    def buscar_ofensiva_usuario(self, id_usuario: int) -> dict | None:
         row = self.db.execute(text("""
             ;WITH datas AS (
                 -- Remover múltiplos registros no mesmo dia
