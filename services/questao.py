@@ -1,10 +1,17 @@
+import random
 from fastapi import  HTTPException
+from repository.conjunto_questao import ConjuntoQuestaoRepository
+from repository.objetivo_usuario import ObjetivoUsuarioRepository
+from repository.palavra import PalavraRepository
+from repository.palavra_objetivo import PalavraObjetivoRepository
 from repository.questao import QuestaoRepository
 from sqlalchemy.orm import Session
 from datetime import date
 from datetime import datetime
+from repository.questao_usuario import QuestaoUsuarioRepository
 from repository.usuario import UsuarioRepository
 import json
+import pandas as pd
 
 class QuestaoService:
 
@@ -12,20 +19,74 @@ class QuestaoService:
         self.db = db
 
     def buscar_questoes_usuario(self, id_usuario: int):
-        print(id_usuario)
-        return QuestaoRepository.buscar_questoes_usuario(self, id_usuario, None)
-    
-    def gerar_questao_id(self, id_usuario: int):
-        questoes_usuario = self.buscar_questoes_usuario(id_usuario)
-        if questoes_usuario is not None and len(questoes_usuario.questoes) > 0:
-            return questoes_usuario
-        
-        date_atual = datetime.now()
-        ids_questao = QuestaoRepository.buscar_questoes(self, id_usuario, 5, 2)
-        id_conjunto = QuestaoRepository.inserir_conjunto_questoes(self, id_usuario, date_atual)
+        i=0
+        conjunto_questoes_ativa = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
+        if conjunto_questoes_ativa is not None and len(conjunto_questoes_ativa) > 0:
+            id_conjunto_questao = conjunto_questoes_ativa[0].id_conjunto_questao
+        else:
+            id_conjunto_questao = ConjuntoQuestaoRepository.criar_conjunto_questao(self, id_usuario)
 
-        QuestaoRepository.inserir_questao_usuario(self, id_usuario, ids_questao, id_conjunto, date_atual) 
-        return self.buscar_questoes_usuario(id_usuario)
+        questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
+        
+        if questoes is None or len(questoes.questoes) < 10:
+            while i < 10 - len(questoes.questoes):
+                id_questao = self.buscar_questao(id_usuario).get("id_questao")
+                if id_questao not in [q.id_questao for q in questoes.questoes]:
+                    QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
+                    i += 1
+            questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
+
+        return questoes
+        
+    
+    def buscar_questao(self, id_usuario: int):
+        todas_questoes = QuestaoRepository.buscar_todas_questoes(self)
+        df_questoes = pd.DataFrame(question.__dict__ for question in todas_questoes)
+        usuario_objetivos = ObjetivoUsuarioRepository.pesquisar_objetivos_usuario(self, id_usuario)
+        questoes_filtradas = pd.DataFrame()
+        questao = None
+        palavras_objetivos = []
+
+        # Buscar palavras relacionadas aos objetivos do usuário
+        if usuario_objetivos is not None and len(usuario_objetivos) > 0:
+            for obj in usuario_objetivos:
+                palavras_objetivos.extend(
+                    PalavraObjetivoRepository.buscar_id_palavras_por_id_objetivo(self, obj.id_objetivo)
+                )
+
+        # Filtrar questões que contenham as palavras relacionadas aos objetivos
+        if palavras_objetivos is not None and len(palavras_objetivos) > 0:
+            i = 0
+            random.shuffle(palavras_objetivos)
+            while questao is None and i < len(palavras_objetivos):
+                palavra = PalavraRepository.buscar_palavra_por_id(self, str(palavras_objetivos[i]))
+                if palavra is not None:
+                    questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                    if not questoes_filtradas.empty:
+                        questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
+                i += 1
+            if questao is None:
+                questao = df_questoes.sample(frac=1).to_dict(orient='records')[0]
+
+        return questao
+
+    def gerar_questao_id(self, id_usuario: int):
+        # id_objetivo_usuario = ObjetivoUsuarioRepository.pesquisar_objetivo_usuario(self, id_usuario)
+        # id_objetivos = [obj.id_objetivo for obj in id_objetivo_usuario]
+        # if not id_objetivos:
+        #     raise HTTPException(status_code=400, detail="Usuário não possui objetivos cadastrados.")
+        
+        # questoes_usuario = self.buscar_questoes_usuario(id_usuario)
+        # if questoes_usuario is not None and len(questoes_usuario.questoes) > 0:
+        #     return questoes_usuario
+        
+        # date_atual = datetime.now()
+        # ids_questao = QuestaoRepository.buscar_questoes(self, id_usuario, 5, 2)
+        # id_conjunto = QuestaoRepository.inserir_conjunto_questoes(self, id_usuario, date_atual)
+
+        # QuestaoRepository.inserir_questao_usuario(self, id_usuario, ids_questao, id_conjunto, date_atual) 
+        # return self.buscar_questoes_usuario(id_usuario)
+        return self.buscar_questao(id_usuario)
 
     def responder_questao(self, id_usuario: int, id_questao: int, alternariva: int, id_conjunto_questao: int):
         usuario = UsuarioRepository.buscar_usuario_por_id(self, id_usuario)

@@ -9,6 +9,28 @@ class QuestaoRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def buscar_todas_questoes(self) -> list[Questao]:
+        rows = self.db.execute(text("""
+            SELECT 
+                id_questao,
+                descricao_questao,
+                json_opcao,
+                resposta 
+            FROM questao
+        """)).all()
+        
+        questoes = []
+        for row in rows:
+            questoes.append(
+                Questao(
+                    id_questao=row.id_questao,
+                    descricao_questao=row.descricao_questao,
+                    json_opcao=row.json_opcao,
+                    resposta=row.resposta
+                )
+            )
+        return questoes
+
     def buscar_questao_por_id(self, id_questao: int) -> Questao | None:
         row = self.db.execute(text("""
             SELECT 
@@ -45,8 +67,6 @@ class QuestaoRepository:
             limit :qnt_questoes"""), {"id_usuario": id_usuario, "qnt_questoes": qnt_questoes, "id_tipo_questao": id_tipo_questao}).all()
         
         return [row_item.id_questao for row_item in row]
-    
- 
 
     def inserir_conjunto_questoes(self, id_usuario: int, data_atual: date) -> int:
         result = self.db.execute(text("""
