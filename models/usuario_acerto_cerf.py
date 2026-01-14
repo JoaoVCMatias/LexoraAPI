@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, DateTime
 from database import Base
 from sqlalchemy import Identity
 
-class Palavra(Base):
+class UsuarioAcertoCerf(Base):
     __tablename__ = "usuario_acerto_cerf"
 
     id_usuario_acerto_cerf = Column(Integer, primary_key=True, server_default=Identity(start=1))

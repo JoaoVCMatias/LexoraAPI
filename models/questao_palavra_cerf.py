@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, DateTime
 from database import Base
 from sqlalchemy import Identity
 
-class Palavra(Base):
+class QuestaoPalavraCerf(Base):
     __tablename__ = "questao_palavra_cerf"
 
     id_questao_palavra_cerf = Column(Integer, primary_key=True, server_default=Identity(start=1))
