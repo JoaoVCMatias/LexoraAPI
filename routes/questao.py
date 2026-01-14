@@ -20,7 +20,7 @@ def gerar_questoes(credentials: HTTPAuthorizationCredentials = Depends(security)
     
     id_usuario = autenticacao_service.token_to_id_usuario(token)
     service = QuestaoService(db)
-    result = service.gerar_questao_id(id_usuario)
+    result = service.gerar_questao_id_old(id_usuario)
     return result
 
 @router.get("/ConjuntoQuestao")
@@ -33,7 +33,7 @@ def buscar_questoes(credentials: HTTPAuthorizationCredentials = Depends(security
         return validacao
     
     service = QuestaoService(db)
-    result = service.buscar_questoes_usuario(id_usuario)
+    result = service.buscar_questoes_usuario_old(id_usuario)
     return result
 
 @router.post("/ResponderQuestao/{id_questao}/{alternativa}/{id_conjunto_questao}")
