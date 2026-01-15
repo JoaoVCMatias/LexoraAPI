@@ -30,7 +30,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo=row.id_questao_objetivo,
                 id_questao=row.id_questao,
                 id_objetivo=row.id_objetivo,
-                qtd_palavras=row.qtq_palavras
+                qtq_palavras=row.qtq_palavras
             )
         
         return row
@@ -52,7 +52,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo=row.id_questao_objetivo,
                 id_questao=row.id_questao,
                 id_objetivo=row.id_objetivo,
-                qtd_palavras=row.qtq_palavras
+                qtq_palavras=row.qtq_palavras
             ))
         
         return questoes_objetivo
