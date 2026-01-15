@@ -20,3 +20,7 @@ from .experiencia_idioma_usuario import ExperienciaIdiomaUsuario
 from .usuario_token import UsuarioToken
 from .palavra_objetivo import PalavreObjetivo
 from .variacao_palavra import VariacaoPalavra
+
+from .questao_objetivo import QuestaoObjetivo
+from .questao_palavra_cerf import QuestaoPalavraCerf
+from .usuario_acerto_cerf import UsuarioAcertoCerf
