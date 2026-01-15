@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from datetime import date
 from datetime import datetime
 from repository.questao_objetivo import QuestaoObjetivoRepository
-from repository.questao_palavra_cerf import QuestaoPalavraCERFRepository
 from repository.questao_usuario import QuestaoUsuarioRepository
 from repository.usuario import UsuarioRepository
 import json

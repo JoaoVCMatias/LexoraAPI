@@ -1,5 +1,4 @@
 import re
-
 import pandas as pd
 from repository.palavra import PalavraRepository
 from repository.questao import QuestaoRepository
