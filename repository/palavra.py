@@ -7,6 +7,28 @@ class PalavraRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def buscar_todas_palavras(self) -> list[Palavra]:
+        rows = self.db.execute(text("""
+            SELECT 
+                id_palavra,
+                descricao_palavra,
+                descricao_palavra_traducao,
+                "CEFR"
+            FROM palavra
+        """)).all()
+        
+        palavras = []
+        for row in rows:
+            palavras.append(
+                Palavra(
+                    id_palavra=row.id_palavra,
+                    descricao_palavra=row.descricao_palavra,
+                    descricao_palavra_traducao=row.descricao_palavra_traducao,
+                    CEFR=row.CEFR
+                )
+            )
+        return palavras
+
     def buscar_palavra_por_id(self, id_palavra: int) -> Palavra | None:
         row = self.db.execute(text("""
             SELECT 
@@ -33,7 +55,7 @@ class PalavraRepository:
                 p.id_palavra,
                 p.descricao_palavra,
                 p.descricao_palavra_traducao,
-                p.CEFR
+                "p.CEFR"
             FROM palavra p
             JOIN palavra_objetivo po ON po.id_palavra = p.id_palavra
             JOIN objetivo_usuario ou ON ou.id_objetivo = po.id_objetivo
@@ -57,7 +79,7 @@ class PalavraRepository:
                 id_palavra,
                 descricao_palavra,
                 descricao_palavra_traducao,
-                CEFR
+                "CEFR"
             FROM palavra
             WHERE descricao_palavra = :descricao_palavra
         """), {"descricao_palavra": descricao_palavra}).first()
@@ -78,7 +100,7 @@ class PalavraRepository:
                 id_palavra,
                 descricao_palavra,
                 descricao_palavra_traducao,
-                CEFR
+                "CEFR"
             FROM palavra
             WHERE CEFR = :cefr
         """), {"cefr": cefr}).all()

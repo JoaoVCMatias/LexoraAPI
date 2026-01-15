@@ -1,6 +1,8 @@
 import random
+import re
 from fastapi import  HTTPException
 from repository.conjunto_questao import ConjuntoQuestaoRepository
+from repository.objetivo import ObjetivoRepository
 from repository.objetivo_usuario import ObjetivoUsuarioRepository
 from repository.palavra import PalavraRepository
 from repository.palavra_objetivo import PalavraObjetivoRepository
@@ -8,6 +10,8 @@ from repository.questao import QuestaoRepository
 from sqlalchemy.orm import Session
 from datetime import date
 from datetime import datetime
+from repository.questao_objetivo import QuestaoObjetivoRepository
+from repository.questao_palavra_cerf import QuestaoPalavraCERFRepository
 from repository.questao_usuario import QuestaoUsuarioRepository
 from repository.usuario import UsuarioRepository
 import json
@@ -28,12 +32,18 @@ class QuestaoService:
 
         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         
-        if questoes is None or len(questoes.questoes) < 10:
-            while i < 10 - len(questoes.questoes):
+        if questoes is not None:
+            if len(questoes.questoes) < 10:
+                while i < 10 - len(questoes.questoes):
+                    id_questao = self.buscar_questao(id_usuario).get("id_questao")
+                    if id_questao not in [q.id_questao for q in questoes.questoes]:
+                        QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
+                        i += 1
+                        questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
+        else:
+            for i in range(10):
                 id_questao = self.buscar_questao(id_usuario).get("id_questao")
-                if id_questao not in [q.id_questao for q in questoes.questoes]:
-                    QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
-                    i += 1
+                QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
             questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
 
         return questoes
@@ -46,13 +56,39 @@ class QuestaoService:
         questoes_filtradas = pd.DataFrame()
         questao = None
         palavras_objetivos = []
+        questao_objetivo = []
+        df_questao_objetivo = pd.DataFrame()
+        df_questoes_duplicadas = pd.DataFrame()
 
         # Buscar palavras relacionadas aos objetivos do usuário
         if usuario_objetivos is not None and len(usuario_objetivos) > 0:
             for obj in usuario_objetivos:
+                questao_objetivo.extend(
+                    QuestaoObjetivoRepository.buscar_questoes_por_objetivo(self, obj.id_objetivo)
+                )
                 palavras_objetivos.extend(
                     PalavraObjetivoRepository.buscar_id_palavras_por_id_objetivo(self, obj.id_objetivo)
                 )
+
+        # busca questoes que o usuario ja respondeu (memoria espaçada) usando a formula de fibonacci
+        questoes_respondidas = QuestaoUsuarioRepository.buscar_questao_usuario_por_id_usuario(self, id_usuario) 
+        df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
+        # df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
+        if questoes_respondidas is not None and len(questoes_respondidas) > 0:
+            for index, row_questao_respondida in df_questoes_respondidas.iterrows():
+                if row_questao_respondida['acerto'] is True:
+                    id_questao = row_questao_respondida['id_questao']
+                    data_resposta = row_questao_respondida['data_resposta']
+                    dias_desde_resposta = (date.today() - pd.to_datetime(data_resposta).date()).days
+                    # Sequência de Fibonacci para espaçamento                    
+
+        # busca quuestoes que possuem mais de um objetivo relacionado ao usuario
+        df_questao_objetivo = pd.DataFrame(questao_objetivo.__dict__ for questao_objetivo in questao_objetivo)
+        ids = df_questao_objetivo['id_questao'].tolist() if not df_questao_objetivo.empty else []
+        if ids:
+            df_questoes_duplicadas = df_questoes[df_questoes['id_questao'].isin(ids)].drop_duplicates(subset=['id_questao'])
+        if not df_questoes_duplicadas.empty:
+            df_questoes = df_questoes_duplicadas
 
         # Filtrar questões que contenham as palavras relacionadas aos objetivos
         if palavras_objetivos is not None and len(palavras_objetivos) > 0:
@@ -61,9 +97,13 @@ class QuestaoService:
             while questao is None and i < len(palavras_objetivos):
                 palavra = PalavraRepository.buscar_palavra_por_id(self, str(palavras_objetivos[i]))
                 if palavra is not None:
-                    questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                    questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
                     if not questoes_filtradas.empty:
-                        questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
+                        questao = questoes_filtradas[questoes_filtradas['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
+                    else:
+                        questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                        if not questoes_filtradas.empty:
+                            questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
                 i += 1
             if questao is None:
                 questao = df_questoes.sample(frac=1).to_dict(orient='records')[0]

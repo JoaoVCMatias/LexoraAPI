@@ -40,3 +40,28 @@ class ConjuntoQuestaoRepository:
         self.db.commit()
         self.db.refresh(novo_conjunto)
         return novo_conjunto.id_conjunto_questao
+
+    def buscar_conjuntos_finalizados_usuario(self, id_usuario: int):
+        rows = self.db.execute(
+            text("""
+                SELECT 
+                    cq.id_conjunto_questao,
+                    cq.id_usuario,
+                    cq.data_criacao,
+                    cq.data_conclusao
+                FROM conjunto_questao cq
+                WHERE cq.id_usuario = :id_usuario AND cq.data_conclusao is not null
+            """), {"id_usuario": id_usuario}
+        ).all()  
+
+        conjuntos_finalizados = []
+        for row in rows:
+            conjunto = ConjuntoQuestao(
+                id_conjunto_questao=row.id_conjunto_questao,
+                id_usuario=row.id_usuario,
+                data_criacao=row.data_criacao,
+                data_conclusao=row.data_conclusao
+            )
+            conjuntos_finalizados.append(conjunto)
+
+        return conjuntos_finalizados
