@@ -7,11 +7,12 @@ class QuestaoObjetivoRepository:
     def __init__(self, db):
         self.db = db
 
-    def inserir_questao_objetivo(self, id_questao: int, id_objetivo: int, qtq_palavras: int):
+    def inserir_questao_objetivo(self, id_questao: int, id_objetivo: int, qtd_palavras: int):
+        return "INSERT INTO questao_objetivo (id_questao, id_objetivo, qtd_palavras) VALUES ("+str(id_questao)+", "+str(id_objetivo)+", "+str(qtd_palavras)+")"
         self.db.execute(text("""
-            INSERT INTO questao_objetivo (id_questao, id_objetivo, qtq_palavras)
-            VALUES (:id_questao, :id_objetivo, :qtq_palavras)
-        """), {"id_questao": id_questao, "id_objetivo": id_objetivo, "qtq_palavras": qtq_palavras})
+            INSERT INTO questao_objetivo (id_questao, id_objetivo, qtd_palavras)
+            VALUES (:id_questao, :id_objetivo, :qtd_palavras)
+        """), {"id_questao": id_questao, "id_objetivo": id_objetivo, "qtd_palavras": qtd_palavras})
         self.db.commit()
 
     def buscar_questao_objetivo(self, id_questao: int, id_objetivo: int):
@@ -20,7 +21,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo,
                 id_questao,
                 id_objetivo,
-                qtq_palavras
+                qtd_palavras
             FROM questao_objetivo
             WHERE id_questao = :id_questao AND id_objetivo = :id_objetivo
         """), {"id_questao": id_questao, "id_objetivo": id_objetivo}).first()
@@ -30,7 +31,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo=row.id_questao_objetivo,
                 id_questao=row.id_questao,
                 id_objetivo=row.id_objetivo,
-                qtq_palavras=row.qtq_palavras
+                qtd_palavras=row.qtd_palavras
             )
         
         return row
@@ -41,7 +42,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo,
                 id_questao,
                 id_objetivo,
-                qtq_palavras
+                qtd_palavras
             FROM questao_objetivo
             WHERE id_objetivo = :id_objetivo
         """), {"id_objetivo": id_objetivo}).all()
@@ -52,7 +53,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo=row.id_questao_objetivo,
                 id_questao=row.id_questao,
                 id_objetivo=row.id_objetivo,
-                qtq_palavras=row.qtq_palavras
+                qtd_palavras=row.qtd_palavras
             ))
         
         return questoes_objetivo
