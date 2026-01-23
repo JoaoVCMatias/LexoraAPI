@@ -88,13 +88,13 @@ class RelatorioRepository:
             	us.ultima_sequencia,
             	msg.maior_sequencia 
             FROM DiasAtivos da
-            INNER JOIN AtividadesFeitas af
+            LEFT JOIN AtividadesFeitas af
             	ON af.id_usuario  = da.id_usuario 
-            INNER JOIN TotalPontos tp
+            LEFT JOIN TotalPontos tp
             	ON tp.id_usuario = da.id_usuario 
-            INNER JOIN UltimaSequencia us
+            LEFT JOIN UltimaSequencia us
             	ON us.id_usuario = da.id_usuario 
-            INNER JOIN MaiorSequenciaGeral msg
+            LEFT JOIN MaiorSequenciaGeral msg
             	ON msg.id_usuario  = da.id_usuario 
         """), {"id_usuario": id_usuario}).first()
         
