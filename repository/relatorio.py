@@ -81,12 +81,12 @@ class RelatorioRepository:
                 	) sub
                 	GROUP BY sub.id_usuario 
             ) SELECT
-            	da.id_usuario,
-            	da.dias_ativos,
-            	af.atividades_feitas,
-            	tp.pontos_totais,
-            	us.ultima_sequencia,
-            	msg.maior_sequencia 
+            	COALESCE(da.id_usuario, 0) AS id_usuario,
+            	COALESCE(da.dias_ativos, 0) AS dias_ativos,
+            	COALESCE(af.atividades_feitas, 0) AS atividades_feitas,
+            	COALESCE(tp.pontos_totais, 0) AS pontos_totais,
+            	COALESCE(us.ultima_sequencia, 0) AS ultima_sequencia,
+            	COALESCE(msg.maior_sequencia, 0) AS maior_sequencia
             FROM DiasAtivos da
             LEFT JOIN AtividadesFeitas af
             	ON af.id_usuario  = da.id_usuario 
