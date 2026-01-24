@@ -1,4 +1,5 @@
 import os 
+import pytz
 
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback_key")
 HORAS_TOKEN = int(os.getenv("HORAS_TOKEN", 8))
