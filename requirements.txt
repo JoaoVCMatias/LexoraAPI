@@ -89,7 +89,7 @@ typer==0.19.2
 typing-inspection==0.4.1
 typing_extensions==4.15.0
 tzdata==2025.2
-urllib3==2.1.0
+urllib3>=2.5.0,<3
 uvicorn==0.37.0
 watchfiles==1.1.0
 websocket-client==1.9.0
@@ -98,4 +98,5 @@ Werkzeug==3.0.1
 wsproto==1.2.0
 yarl==1.22.0
 zipp==3.17.0
+
 
