@@ -1,7 +1,9 @@
 from datetime import datetime
+import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from schemas.relatorio import RelatorioEstatiticas, RelatorioDataUsuario, RelatorioAtividadeUsuario
+from config import TZ_BRASIL
 
 class RelatorioRepository:
     def __init__(self, db: Session):
@@ -165,7 +167,8 @@ class RelatorioRepository:
         return None
 
     def buscar_metas_usuario(self, id_usuario: int) -> RelatorioAtividadeUsuario | None:
-        data_atual = datetime.now()
+        data_atual = datetime.now(TZ_BRASIL)
+
         row = self.db.execute(text("""
             SELECT 
 	            CASE 
@@ -185,7 +188,7 @@ class RelatorioRepository:
             WHERE u.id_usuario = :id_usuario
             GROUP BY u.id_disponibilidade
         """), {"id_usuario": id_usuario, "data_atual": data_atual}).first()
-
+        print("Id usuário:", id_usuario, "Data atual:", data_atual)
         if row:
             return RelatorioAtividadeUsuario(
                 meta=row.meta,
@@ -194,7 +197,7 @@ class RelatorioRepository:
         return None 
     
     def buscar_ofensiva_usuario(self, id_usuario: int) -> int | None:
-        data_atual = datetime.now()
+        data_atual = datetime.now(TZ_BRASIL)
         row = self.db.execute(text("""
             ;WITH datas AS (
                 -- Remover múltiplos registros no mesmo dia
@@ -235,9 +238,10 @@ class RelatorioRepository:
             SELECT 
                 dias_consecutivos 
             FROM grupo_ofensiva
-            WHERE fim_streak = CAST(:data_atual AS DATE)
+            WHERE fim_streak = CAST(:data_atual - INTERVAL '1 day' AS DATE)
+            OR fim_streak = CAST(:data_atual AS DATE)
         """), {"id_usuario": id_usuario, "data_atual": data_atual}).first()
-        print(id_usuario)
+        print("Id usuário:", id_usuario, "Data atual:", data_atual)
         if row:
             return row.dias_consecutivos
         return None
