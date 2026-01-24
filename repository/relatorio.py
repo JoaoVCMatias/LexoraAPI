@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from schemas.relatorio import RelatorioEstatiticas, RelatorioDataUsuario, RelatorioAtividadeUsuario
@@ -164,6 +165,7 @@ class RelatorioRepository:
         return None
 
     def buscar_metas_usuario(self, id_usuario: int) -> RelatorioAtividadeUsuario | None:
+        data_atual = datetime.now()
         row = self.db.execute(text("""
             SELECT 
 	            CASE 
@@ -176,13 +178,13 @@ class RelatorioRepository:
             FROM usuario u
             LEFT JOIN conjunto_questao cq 
             	ON cq.id_usuario  = u.id_usuario 
-            	AND cq.data_criacao::date = now()::date
+            	AND cq.data_criacao::date = CAST(:data_atual AS DATE)
             	AND cq.data_conclusao  IS NOT NULL 
             LEFT JOIN questao_usuario qu 
             	ON qu.id_conjunto_questao  = cq.id_conjunto_questao 
             WHERE u.id_usuario = :id_usuario
             GROUP BY u.id_disponibilidade
-        """), {"id_usuario": id_usuario}).first()
+        """), {"id_usuario": id_usuario, "data_atual": data_atual}).first()
 
         if row:
             return RelatorioAtividadeUsuario(
@@ -191,7 +193,8 @@ class RelatorioRepository:
             )
         return None 
     
-    def buscar_ofensiva_usuario(self, id_usuario: int) -> dict | None:
+    def buscar_ofensiva_usuario(self, id_usuario: int) -> int | None:
+        data_atual = datetime.now()
         row = self.db.execute(text("""
             ;WITH datas AS (
                 -- Remover múltiplos registros no mesmo dia
@@ -232,11 +235,11 @@ class RelatorioRepository:
             SELECT 
                 dias_consecutivos 
             FROM grupo_ofensiva
-            WHERE fim_streak = NOW()::date
-        """), {"id_usuario": id_usuario}).first()
+            WHERE fim_streak = CAST(:data_atual AS DATE)
+        """), {"id_usuario": id_usuario, "data_atual": data_atual}).first()
+        print(id_usuario)
         if row:
-            ofensiva = {
-                "ofensiva": row.dias_consecutivos
-            }
+            return row.dias_consecutivos
+        return None
         
     
