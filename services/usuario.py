@@ -69,7 +69,7 @@ class UsuarioService:
         
         usuario_repositoy.inseir_informacoes_usuario(id_usuario, usuario_info)
         experiencia_usuario_service = ExperienciaIdiomaUsuarioService(self.db)
-        experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario_info.id_idioma, id_usuario, usuario.id_experiencia_idioma)
+        experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario_info.id_idioma, id_usuario, usuario_info.id_experiencia_idioma)
         objetivo_usuario_service = ObjetivoUsuarioService(self.db)
         objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario_info.id_objetivo)
         usuario.cadastro_completo = 1
