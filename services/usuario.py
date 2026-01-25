@@ -55,21 +55,50 @@ class UsuarioService:
         self.validar_dados_usuario(usuario)
         data_atual = date.today()
         hash_senha = self.gerar_hash_senha(usuario.senha)
-        novo_usuario = Usuario(nome = usuario.nome, email = usuario.email, senha = hash_senha, cadastro_completo = 0, data_ultimo_acesso = data_atual, data_criacao = data_atual, ativo = False)
+        novo_usuario = Usuario(nome = usuario.nome, email = usuario.email, senha = hash_senha, cadastro_completo = 0, data_ultimo_acesso = data_atual, data_criacao = data_atual, ativo = True)
         usuario_repository.inserir_usuario(novo_usuario)
         token = self.gerar_token(novo_usuario.id_usuario)
         self.salvar_token(novo_usuario, token)
         return token
 
-    def alterar_usuario_informacao(self, id_usuario, usuario: UsuarioInfosCreate):
+    def inserir_usuario_informacao(self, id_usuario, usuario: UsuarioInfosCreate):
         usuario_repositoy = UsuarioRepository(self.db)
-        self.pesquisar_usuario(id_usuario)
-        usuario_repositoy.alterar_informacoes_usuario(id_usuario, usuario)
+        usuario = self.pesquisar_usuario(id_usuario)
+        if usuario.cadastro_completo == 1:
+            raise HTTPException(status_code=422, detail="Usuário já possui informações cadastradas.")
+        
+        usuario_repositoy.inseir_informacoes_usuario(id_usuario, usuario)
         experiencia_usuario_service = ExperienciaIdiomaUsuarioService(self.db)
         experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario.id_idioma, id_usuario, usuario.id_experiencia_idioma)
         objetivo_usuario_service = ObjetivoUsuarioService(self.db)
         objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario.id_objetivo)
+        usuario.cadastro_completo = 1
         self.db.commit()
+
+    def alterar_objetivo_usuario(self, id_usuario: int, id_objetivo: int):
+        usuario_repositoy = UsuarioRepository(self.db)
+        objetivo_usuario_service = ObjetivoUsuarioService(self.db)
+
+        objetivo_usuario = usuario_repositoy.buscar_objetivos_usuario(id_usuario)
+        if id_objetivo == objetivo_usuario.id_objetivo:
+            return 
+        print(objetivo_usuario.id_objetivo_usuario)
+        objetivo_usuario_service.deletar_objetivo_usuario(objetivo_usuario.id_objetivo_usuario)
+
+        objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, id_objetivo)
+
+    def alterar_usuario_informacao(self, id_usuario, usuario_info_change: UsuarioInfosCreate):
+        usuario_repositoy = UsuarioRepository(self.db)
+        usuario = self.pesquisar_usuario(id_usuario)
+        if usuario.cadastro_completo == 0:
+            raise HTTPException(status_code=422, detail="Usuário não possui informações cadastradas.")
+        
+        usuario_repositoy.inseir_informacoes_usuario(id_usuario, usuario_info_change)
+        experiencia_usuario_service = ExperienciaIdiomaUsuarioService(self.db)
+        experiencia_usuario_service.alterar_experiencia_idioma_usuario(usuario_info_change.id_idioma, id_usuario, usuario_info_change.id_experiencia_idioma)
+
+        self.alterar_objetivo_usuario(id_usuario, usuario_info_change.id_objetivo)
+
 
     def pesquisar_usuario_info(self, id_usuario):
         usuario_repositoy = UsuarioRepository(self.db)

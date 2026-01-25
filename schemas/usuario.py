@@ -28,6 +28,13 @@ class UsuarioInfosCreate(BaseModel):
     id_disponibilidade: int
     data_nascimento: DateTime
 
+class UsuarioInfoAlterar(BaseModel):
+    id_idioma: int
+    id_experiencia_idioma: int 
+    id_disponibilidade: int
+    id_disponibilidade: int
+    data_nascimento: DateTime
+
 class UsuarioIdiomaDto(BaseModel):
     id_idioma: int
     id_experiencia_idioma: int 
