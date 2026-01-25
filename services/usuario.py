@@ -69,6 +69,7 @@ class UsuarioService:
         experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario.id_idioma, id_usuario, usuario.id_experiencia_idioma)
         objetivo_usuario_service = ObjetivoUsuarioService(self.db)
         objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario.id_objetivo)
+        self.db.commit()
 
     def pesquisar_usuario_info(self, id_usuario):
         usuario_repositoy = UsuarioRepository(self.db)
