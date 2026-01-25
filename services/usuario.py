@@ -61,17 +61,17 @@ class UsuarioService:
         self.salvar_token(novo_usuario, token)
         return token
 
-    def inserir_usuario_informacao(self, id_usuario, usuario: UsuarioInfosCreate):
+    def inserir_usuario_informacao(self, id_usuario, usuario_info: UsuarioInfosCreate):
         usuario_repositoy = UsuarioRepository(self.db)
         usuario = self.pesquisar_usuario(id_usuario)
         if usuario.cadastro_completo == 1:
             raise HTTPException(status_code=422, detail="Usuário já possui informações cadastradas.")
         
-        usuario_repositoy.inseir_informacoes_usuario(id_usuario, usuario)
+        usuario_repositoy.inseir_informacoes_usuario(id_usuario, usuario_info)
         experiencia_usuario_service = ExperienciaIdiomaUsuarioService(self.db)
-        experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario.id_idioma, id_usuario, usuario.id_experiencia_idioma)
+        experiencia_usuario_service.cadastrar_experiencia_idioma_usuario(usuario_info.id_idioma, id_usuario, usuario.id_experiencia_idioma)
         objetivo_usuario_service = ObjetivoUsuarioService(self.db)
-        objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario.id_objetivo)
+        objetivo_usuario_service.cadastrar_objetivo_usuario(id_usuario, usuario_info.id_objetivo)
         usuario.cadastro_completo = 1
         self.db.commit()
 
