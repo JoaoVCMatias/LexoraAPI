@@ -143,14 +143,14 @@ class RelatorioRepository:
             )SELECT DISTINCT 
             	du.dia, 
             	--CASE WHEN cq.data_conclusao IS NOT NULL THEN TRUE ELSE FALSE END AS Feito,
-            	COALESCE(cp.pontos, 0) AS pontos 
+            	COALESCE(sum(cp.pontos), 0) AS pontos 
             FROM DataUnion du
             LEFT JOIN conjunto_questao cq 
             	ON cq.data_criacao = du.dia 
             	AND cq.data_conclusao IS NOT NULL
             LEFT JOIN CalcularPontos15 cp
             	ON cp.DATA = du.dia 
-            GROUP BY	 du.dia  
+            GROUP BY du.dia  
             ORDER BY du.dia
         """), {"id_usuario": id_usuario}).all()
 
