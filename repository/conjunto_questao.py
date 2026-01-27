@@ -79,3 +79,24 @@ class ConjuntoQuestaoRepository:
             }
         )
         self.db.commit()
+
+    def buscar_conjunto_questao_por_id(self, id_conjunto_questao: int) -> ConjuntoQuestao | None:
+        row = self.db.execute(text("""
+            SELECT 
+                id_conjunto_questao,
+                id_usuario,
+                data_criacao,
+                data_conclusao
+            FROM conjunto_questao
+            WHERE id_conjunto_questao = :id_conjunto_questao
+        """), {"id_conjunto_questao": id_conjunto_questao}).first()
+        
+        if row:
+            return ConjuntoQuestao(
+                id_conjunto_questao=row.id_conjunto_questao,
+                id_usuario=row.id_usuario,
+                data_criacao=row.data_criacao,
+                data_conclusao=row.data_conclusao
+            )
+        
+        return row

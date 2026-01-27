@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from services import DominioService
+from services.conjunto_questoes import ConjuntoQuestoesService
 from services.questao import QuestaoService
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from services import UsuarioService, AutenticacaoService, ExperienciaIdiomaUsuarioService
@@ -67,4 +68,18 @@ def relatorio_desenpenho(credentials: HTTPAuthorizationCredentials = Depends(sec
     id_usuario = autenticacao_service.token_to_id_usuario(token)
     service = QuestaoService(db)
     result = service.gerar_relatorio_questoes_usuario(id_usuario)
+    return result
+
+@router.get("/ResultadoConjunto/{id_conjunto_questao}")
+def resultado_conjunto_questao(id_conjunto_questao: int, credentials: HTTPAuthorizationCredentials = Depends(security), db:Session = Depends(get_db)):
+    token = credentials.credentials
+    autenticacao_service = AutenticacaoService(db)
+    validacao = autenticacao_service.validar_token(token)
+    
+    if isinstance(validacao, HTTPException):
+        return validacao
+    
+    id_usuario = autenticacao_service.token_to_id_usuario(token)
+    service = ConjuntoQuestoesService(db)
+    result = service.resultado_conjunto_questao(id_usuario, id_conjunto_questao)
     return result

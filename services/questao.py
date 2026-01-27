@@ -13,6 +13,7 @@ from datetime import datetime
 from repository.questao_objetivo import QuestaoObjetivoRepository
 from repository.questao_palavra_cerf import QuestaoPalavraCERFRepository
 from repository.questao_usuario import QuestaoUsuarioRepository
+from repository.relatorio import RelatorioRepository
 from repository.usuario import UsuarioRepository
 import json
 import pandas as pd
@@ -33,17 +34,18 @@ class QuestaoService:
             id_conjunto_questao = ConjuntoQuestaoRepository.criar_conjunto_questao(self, id_usuario)
 
         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
+        meta = RelatorioRepository.buscar_metas_usuario(self, id_usuario)
         
         if questoes is not None:
-            if len(questoes.questoes) < 10:
-                while i < (10 - len(questoes.questoes)):
+            if len(questoes.questoes) < meta.meta:
+                while i < (meta.meta - len(questoes.questoes)):
                     id_questao = self.buscar_questao(id_usuario).get("id_questao")
                     if id_questao not in [q.id_questao for q in questoes.questoes]:
                         QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
                         i += 1
                         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         else:
-            for i in range(10):
+            for i in meta.meta:
                 id_questao = self.buscar_questao(id_usuario).get("id_questao")
                 QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
             questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
@@ -65,14 +67,18 @@ class QuestaoService:
         df_conjunto_questao = pd.DataFrame()  
         df_questao_objetivo = pd.DataFrame()
         df_questoes_duplicadas = pd.DataFrame()
+        fibonacci_sequence = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
 
-        if id_conjunto_questao is not None:
+        if id_conjunto_questao is None:
             conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
             if conjunto_ativo is not None and len(conjunto_ativo) > 0:
                 id_conjunto_questao = conjunto_ativo[0].id_conjunto_questao
-            conjunto_questao = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao).questoes
-            df_conjunto_questao = pd.DataFrame(questao_conjunto.__dict__ for questao_conjunto in conjunto_questao)
-            df_questoes = df_questoes[~df_questoes['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
+        else:
+            conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questao_por_id(self, id_conjunto_questao)
+        
+        conjunto_questao = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao).questoes
+        df_conjunto_questao = pd.DataFrame(questao_conjunto.__dict__ for questao_conjunto in conjunto_questao)
+        df_questoes = df_questoes[~df_questoes['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
 
         # Buscar palavras relacionadas aos objetivos do usuário
         if usuario_objetivos is not None and len(usuario_objetivos) > 0:
@@ -84,30 +90,29 @@ class QuestaoService:
                     PalavraObjetivoRepository.buscar_id_palavras_por_id_objetivo(self, obj.id_objetivo)
                 )
 
-        
-        # busca questoes que o usuario ja respondeu (memoria espaçada) usando a formula de fibonacci
+        # busca questoes que o usuario ja respondeu para revisão (memoria espaçada) usando a formula de fibonacci
         questoes_respondidas = QuestaoUsuarioRepository.buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario) 
-        df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
-        # df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
+        
         if questoes_respondidas is not None and len(questoes_respondidas) > 0:
+            df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
+            df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
+            df_questoes_respondidas = df_questoes_respondidas[~df_questoes_respondidas['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
             for index, row_questao_respondida in df_questoes_respondidas.iterrows():
                 historico_questao = df_questoes_respondidas[df_questoes_respondidas['id_questao'] == row_questao_respondida['id_questao']]
-                historico_questao = historico_questao.sort_values(by='data_resposta', ascending=False)
+                historico_questao = pd.DataFrame(historico_questao.sort_values(by='data_resposta'))
                 contador_acertos = 0
                 ultimo = historico_questao.iloc[-1]
+
                 for i in range(len(historico_questao)):
-                    if historico_questao.iloc[i]['acerto'] is True and (date.today() - pd.to_datetime(data_resposta).date()).days >= 0:
-                        contador_acertos += 1
-                    else:
-                        break
+                    if historico_questao.iloc[i]['acerto'] and (date.today() - pd.to_datetime(historico_questao.iloc[i]['data_resposta']).date()).days > 0:
+                        contador_acertos = contador_acertos + 1
 
                 if contador_acertos > 0:
                     data_ultima_resposta = pd.to_datetime(ultimo['data_resposta']).date()
-                    qtd_dias_repetir = ((1+5**(1/2))**contador_acertos -(1+5**(1/2))**contador_acertos)/(2**contador_acertos)*(1+5**(1/2)) # Sequência de Fibonacci simplificada
+                    qtd_dias_repetir = fibonacci_sequence[contador_acertos - 1] if contador_acertos - 1 < len(fibonacci_sequence) else fibonacci_sequence[-1]
+
                     if data_ultima_resposta + pd.Timedelta(days=qtd_dias_repetir) >= pd.to_datetime(date.today()).date():
-                        print(qtd_dias_repetir)
-                        print("data ultima resposta:", data_ultima_resposta)
-                        print("REPETE HOJEEEEEEEEEEEE")
+                        questao = df_questoes[df_questoes['id_questao'] == row_questao_respondida['id_questao']].to_dict(orient='records')[0]
                 
                 if row_questao_respondida['acerto'] is True:
                     id_questao = row_questao_respondida['id_questao']
@@ -178,10 +183,6 @@ class QuestaoService:
         a1, a2, b1, b2, c1, c2 = 0, 0, 0, 0, 0, 0
         if not usuario:
             return HTTPException(status_code=404, detail="Usuário não encontrado.")
-        
-        questoes_usuario = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao).questoes
-        questoes_respondidas = [questao for questao in questoes_usuario if questao.resposta_usuario is not None]
-        conclusao = True if len(questoes_respondidas) == len(questoes_usuario) else False
 
         questao = QuestaoRepository.buscar_questao_por_id(self, id_questao)
         if not questao:
@@ -236,6 +237,11 @@ class QuestaoService:
             UsuarioAcertoCERFRepository.update_usuario_acerto_cerf(self, id_usuario, a1_total, a2_total, b1_total, b2_total, c1_total, c2_total)
 
         QuestaoRepository.responder_questao(self, id_usuario, id_questao, correta, alterenativas_questao[alternariva], id_conjunto_questao, data_resposta)
+
+        questoes_usuario = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao).questoes
+        questoes_respondidas = [questao for questao in questoes_usuario if questao.resposta_usuario is not None]
+        conclusao = True if len(questoes_respondidas) == len(questoes_usuario) else False
+
         if conclusao:
             ConjuntoQuestaoRepository.concluir_conjunto_questao(self, id_usuario, id_conjunto_questao, data_resposta)
             
@@ -243,9 +249,13 @@ class QuestaoService:
     
     def gerar_relatorio_questoes_usuario(self, id_usuario: int):
         relatorio = QuestaoRepository.relatorio_desenpenho_usuario(self, id_usuario)
+        if relatorio is None:
+            return None
         for r in relatorio:
             questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, r.id_conjunto_questao)
             r.questoes.append(questoes) 
         return relatorio
 
-    
+    def buscar_questoes_usuario_por_conjunto(self, id_usuario: int, id_conjunto_questao: int | None = None):
+        questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
+        return questoes
