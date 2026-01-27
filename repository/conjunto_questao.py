@@ -34,7 +34,7 @@ class ConjuntoQuestaoRepository:
     def criar_conjunto_questao(self, id_usuario: int):
         novo_conjunto = ConjuntoQuestao(
             id_usuario=id_usuario,
-            data_criacao=text("CURRENT_DATE")
+            data_criacao=text("(SELECT NOW() AT TIME ZONE 'America/Sao_Paulo')")
         )
         self.db.add(novo_conjunto)
         self.db.commit()

@@ -116,13 +116,13 @@ class RelatorioRepository:
         row = self.db.execute(text("""
             ;WITH CalendarioMes AS (
 	            SELECT generate_series(
-                		date_trunc('month', current_date)::date,                   -- primeiro dia do mês atual
-                		(date_trunc('month', current_date) 
+                		date_trunc('month', (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo'))::date,                   -- primeiro dia do mês atual
+                		(date_trunc('month', (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo')) 
                     		+ interval '1 month - 1 day')::date,         -- último dia do mês atual
                 		interval '1 day'
 	            )::date AS dia
             ), Data15Dias AS (
-            	SELECT (current_date - INTERVAL '15 days')::date AS data_menos_15
+            	SELECT ((SELECT NOW() AT TIME ZONE 'America/Sao_Paulo') - INTERVAL '15 days')::date AS data_menos_15
             ), DataUnion AS (
             		SELECT dia FROM CalendarioMes
             		UNION

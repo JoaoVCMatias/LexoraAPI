@@ -2,14 +2,16 @@ from fastapi import  HTTPException
 from sqlalchemy.orm import Session
 from schemas.usuario import UsuarioCreate, UsuarioInfosCreate ,UsuarioAutentication, UsuarioResponse
 from schemas.usuario_token import UsuarioTokenCreate
+from datetime import datetime
 from models import Usuario
-from datetime import date
 from .validacao import ValidacaoService
 from .senha import SenhaService
 from .autenticacao import AutenticacaoService
 from repository import UsuarioRepository
 from services.experiencia_idioma_usuario import  ExperienciaIdiomaUsuarioService
 from services.objetivo_usuario import ObjetivoUsuarioService
+import pytz
+from config import TZ_BRASIL
 
 
 class UsuarioService:
@@ -53,7 +55,7 @@ class UsuarioService:
     def cadastrar_usuario(self, usuario: UsuarioCreate):
         usuario_repository = UsuarioRepository(self.db)
         self.validar_dados_usuario(usuario)
-        data_atual = date.today()
+        data_atual = datetime.now(TZ_BRASIL)
         hash_senha = self.gerar_hash_senha(usuario.senha)
         novo_usuario = Usuario(nome = usuario.nome, email = usuario.email, senha = hash_senha, cadastro_completo = 0, data_ultimo_acesso = data_atual, data_criacao = data_atual, ativo = True)
         usuario_repository.inserir_usuario(novo_usuario)

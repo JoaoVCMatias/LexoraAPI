@@ -1,6 +1,7 @@
 import random
 import re
 from fastapi import  HTTPException
+from config import TZ_BRASIL
 from repository.conjunto_questao import ConjuntoQuestaoRepository
 from repository.objetivo import ObjetivoRepository
 from repository.objetivo_usuario import ObjetivoUsuarioRepository
@@ -134,7 +135,7 @@ class QuestaoService:
         if questoes_usuario is not None and len(questoes_usuario.questoes) > 0:
              return questoes_usuario
         
-        date_atual = datetime.now()
+        date_atual = datetime.now(TZ_BRASIL)
         ids_questao = QuestaoRepository.buscar_questoes(self, id_usuario, 5, 2)
         id_conjunto = QuestaoRepository.inserir_conjunto_questoes(self, id_usuario, date_atual)
         QuestaoRepository.inserir_questao_usuario(self, id_usuario, ids_questao, id_conjunto, date_atual) 
@@ -161,8 +162,8 @@ class QuestaoService:
             raise HTTPException(status_code=400, detail="Alternativa inválida.")
         elif alterenativas_questao[alternariva] != questao.resposta:
             correta = False
-        
-        data_resposta = datetime.now()
+
+        data_resposta = datetime.now(TZ_BRASIL)
 
         QuestaoRepository.responder_questao(self, id_usuario, id_questao, correta, alterenativas_questao[alternariva], id_conjunto_questao, data_resposta)
         if conclusao:
