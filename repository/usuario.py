@@ -20,7 +20,7 @@ class UsuarioRepository:
     
     def buscar_dados_usuario(self, id_usuario: int)-> UsuarioInfoDto | None: 
         row = self.db.execute(text("""
-            SELECT u.id_usuario, u.nome, u.data_nascimento, u.email, d.descricao_disponibilidade
+            SELECT u.id_usuario, u.nome, u.data_nascimento, u.email, d.id_disponibilidade, d.descricao_disponibilidade
             FROM usuario u
             LEFT JOIN disponibilidade d ON d.id_disponibilidade = u.id_disponibilidade
             WHERE u.id_usuario = :id
@@ -32,6 +32,7 @@ class UsuarioRepository:
                 nome=row.nome,
                 data_nascimento=row.data_nascimento,
                 email=row.email,
+                id_disponibilidade=row.id_disponibilidade,
                 descricao_disponibilidade=row.descricao_disponibilidade
             )
         return None
