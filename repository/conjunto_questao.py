@@ -70,10 +70,9 @@ class ConjuntoQuestaoRepository:
         self.db.execute(
             text("""
                 UPDATE conjunto_questao
-                SET data_conclusao = :data_conclusao
+                SET data_conclusao = (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo')
                 WHERE id_conjunto_questao = :id_conjunto_questao AND id_usuario = :id_usuario
             """), {
-                "data_conclusao": data_conclusao,
                 "id_conjunto_questao": id_conjunto_questao,
                 "id_usuario": id_usuario
             }
