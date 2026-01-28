@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 
 class RelatorioEstatiticas(BaseModel):
-    id_usuario: int
-    dias_ativo: int
-    atividades_feitas: int
-    pontos_totais: int
-    maior_sequencia: int
-    ultima_sequencia: int
+    id_usuario: int | None = None
+    dias_ativo: int | None = None
+    atividades_feitas: int | None = None
+    pontos_totais: int | None = None
+    maior_sequencia: int | None = None
+    ultima_sequencia: int | None = None
 
 class RelatorioDataUsuario(BaseModel):
     data: str

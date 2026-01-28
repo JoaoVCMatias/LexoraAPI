@@ -20,7 +20,7 @@ class UsuarioRepository:
     
     def buscar_dados_usuario(self, id_usuario: int)-> UsuarioInfoDto | None: 
         row = self.db.execute(text("""
-            SELECT u.id_usuario, u.nome, u.data_nascimento, u.email, d.descricao_disponibilidade
+            SELECT u.id_usuario, u.nome, u.data_nascimento, u.email, d.id_disponibilidade, d.descricao_disponibilidade
             FROM usuario u
             LEFT JOIN disponibilidade d ON d.id_disponibilidade = u.id_disponibilidade
             WHERE u.id_usuario = :id
@@ -32,6 +32,7 @@ class UsuarioRepository:
                 nome=row.nome,
                 data_nascimento=row.data_nascimento,
                 email=row.email,
+                id_disponibilidade=row.id_disponibilidade,
                 descricao_disponibilidade=row.descricao_disponibilidade
             )
         return None
@@ -67,6 +68,8 @@ class UsuarioRepository:
             inner join usuario u 
             	on U.id_usuario  = ou.id_usuario 
             where  U.id_usuario  = :id
+            and ou.ativo = true 
+            and ou.data_exclusao is null
         """), {"id": id_usuario}).first()
 
         if row:
@@ -82,7 +85,7 @@ class UsuarioRepository:
         self.db.refresh(novo_usuario)
         print("Log: Usuario cadastrado")
 
-    def alterar_informacoes_usuario(self, id_usuario: int, usuario_alteracao: UsuarioInfosCreate):
+    def inseir_informacoes_usuario(self, id_usuario: int, usuario_alteracao: UsuarioInfosCreate):
         usuario_cadastrado = self.db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
         usuario_cadastrado.id_idioma_materno = 1
         usuario_cadastrado.id_disponibilidade = usuario_alteracao.id_disponibilidade

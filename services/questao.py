@@ -1,6 +1,7 @@
 import random
 import re
 from fastapi import  HTTPException
+from config import TZ_BRASIL
 from repository.conjunto_questao import ConjuntoQuestaoRepository
 from repository.objetivo import ObjetivoRepository
 from repository.objetivo_usuario import ObjetivoUsuarioRepository
@@ -26,6 +27,7 @@ class QuestaoService:
         self.db = db
 
     def buscar_questoes_usuario(self, id_usuario: int):
+
         i=0
         conjunto_questoes_ativa = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
         if conjunto_questoes_ativa is not None and len(conjunto_questoes_ativa) > 0:
@@ -49,7 +51,12 @@ class QuestaoService:
                         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         else:
             while i < meta.meta:
-                id_questao = self.buscar_questao(id_usuario).get("id_questao")
+                print("inserindo questão ", i, " de ", meta.meta)
+                questao = self.buscar_questao(id_usuario)
+                while questao is None:
+                    questao = self.buscar_questao(id_usuario)
+                print(questao)
+                id_questao = questao.get("id_questao")
                 QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
                 i = i + 1
             questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
@@ -60,6 +67,7 @@ class QuestaoService:
         return QuestaoRepository.buscar_questoes_usuario(self, id_usuario, None) 
     
     def buscar_questao(self, id_usuario: int, id_conjunto_questao: int = None):
+        print("Buscando nova questão...")
         todas_questoes = QuestaoRepository.buscar_todas_questoes(self)
         df_questoes = pd.DataFrame(question.__dict__ for question in todas_questoes)
         usuario_objetivos = ObjetivoUsuarioRepository.pesquisar_objetivos_usuario(self, id_usuario)
@@ -80,6 +88,8 @@ class QuestaoService:
                 id_conjunto_questao = conjunto_ativo[0].id_conjunto_questao
             else:
                 id_conjunto_questao = ConjuntoQuestaoRepository.criar_conjunto_questao(self, id_usuario)
+                print(f"Conjunto de questões criado: {id_conjunto_questao}")
+
 
         if id_conjunto_questao is None:      
             conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
@@ -108,7 +118,7 @@ class QuestaoService:
 
         # busca questoes que o usuario ja respondeu para revisão (memoria espaçada) usando a formula de fibonacci
         questoes_respondidas = QuestaoUsuarioRepository.buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario) 
-        
+            
         if questoes_respondidas is not None and len(questoes_respondidas) > 0:
             df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
             df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
@@ -138,7 +148,6 @@ class QuestaoService:
             df_questoes_duplicadas = df_questoes[df_questoes['id_questao'].isin(ids)].drop_duplicates(subset=['id_questao'])
         if not df_questoes_duplicadas.empty:
             df_questoes = df_questoes_duplicadas
-
         # Filtrar questões que contenham as palavras relacionadas aos objetivos
         # if palavras_objetivos is not None and len(palavras_objetivos) > 0:
         #     i = 0
@@ -243,7 +252,7 @@ class QuestaoService:
         if questoes_usuario is not None and len(questoes_usuario.questoes) > 0:
              return questoes_usuario
         
-        date_atual = datetime.now()
+        date_atual = datetime.now(TZ_BRASIL)
         ids_questao = QuestaoRepository.buscar_questoes(self, id_usuario, 5, 2)
         id_conjunto = QuestaoRepository.inserir_conjunto_questoes(self, id_usuario, date_atual)
         QuestaoRepository.inserir_questao_usuario(self, id_usuario, ids_questao, id_conjunto, date_atual) 
@@ -267,8 +276,8 @@ class QuestaoService:
             raise HTTPException(status_code=400, detail="Alternativa inválida.")
         elif alterenativas_questao[alternariva] != questao.resposta:
             correta = False
-        
-        data_resposta = datetime.now()
+
+        data_resposta = datetime.now(TZ_BRASIL)
 
         questao_palavra_cerf = QuestaoPalavraCERFRepository.buscar_questao_palavra_cerf_por_id_questao(self, id_questao)
         if questao_palavra_cerf is not None:

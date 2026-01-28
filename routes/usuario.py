@@ -44,6 +44,18 @@ def logout_usuario(credentials: HTTPAuthorizationCredentials = Depends(security)
     return json.dumps(1)
 
 @router.post("/UsuarioInformacao")
+def inserir_usuario_informacao(usuario_info_change: UsuarioInfosCreate, credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    token = credentials.credentials
+    autenticacao_service = AutenticacaoService(db)
+    validacao = autenticacao_service.validar_token(token)
+    if isinstance(validacao, HTTPException):
+        return validacao
+    id_usuario = AutenticacaoService.token_to_id_usuario(token)
+    service = UsuarioService(db)
+    service.inserir_usuario_informacao(id_usuario, usuario_info_change)
+    return json.dumps(1)
+
+@router.put("/UsuarioInformacao")
 def alterar_usuario_informacao(usuario_info_change: UsuarioInfosCreate, credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
     autenticacao_service = AutenticacaoService(db)

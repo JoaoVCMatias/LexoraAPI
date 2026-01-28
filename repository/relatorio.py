@@ -1,6 +1,9 @@
+from datetime import datetime
+import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from schemas.relatorio import RelatorioEstatiticas, RelatorioDataUsuario, RelatorioAtividadeUsuario
+from config import TZ_BRASIL
 
 class RelatorioRepository:
     def __init__(self, db: Session):
@@ -81,20 +84,20 @@ class RelatorioRepository:
                 	) sub
                 	GROUP BY sub.id_usuario 
             ) SELECT
-            	da.id_usuario,
-            	da.dias_ativos,
-            	af.atividades_feitas,
-            	tp.pontos_totais,
-            	us.ultima_sequencia,
-            	msg.maior_sequencia 
+            	COALESCE(da.id_usuario, 0) AS id_usuario,
+            	COALESCE(da.dias_ativos, 0) AS dias_ativos,
+            	COALESCE(af.atividades_feitas, 0) AS atividades_feitas,
+            	COALESCE(tp.pontos_totais, 0) AS pontos_totais,
+            	COALESCE(us.ultima_sequencia, 0) AS ultima_sequencia,
+            	COALESCE(msg.maior_sequencia, 0) AS maior_sequencia
             FROM DiasAtivos da
-            INNER JOIN AtividadesFeitas af
+            LEFT JOIN AtividadesFeitas af
             	ON af.id_usuario  = da.id_usuario 
-            INNER JOIN TotalPontos tp
+            LEFT JOIN TotalPontos tp
             	ON tp.id_usuario = da.id_usuario 
-            INNER JOIN UltimaSequencia us
+            LEFT JOIN UltimaSequencia us
             	ON us.id_usuario = da.id_usuario 
-            INNER JOIN MaiorSequenciaGeral msg
+            LEFT JOIN MaiorSequenciaGeral msg
             	ON msg.id_usuario  = da.id_usuario 
         """), {"id_usuario": id_usuario}).first()
         
@@ -113,13 +116,13 @@ class RelatorioRepository:
         row = self.db.execute(text("""
             ;WITH CalendarioMes AS (
 	            SELECT generate_series(
-                		date_trunc('month', current_date)::date,                   -- primeiro dia do mês atual
-                		(date_trunc('month', current_date) 
+                		date_trunc('month', (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo'))::date,                   -- primeiro dia do mês atual
+                		(date_trunc('month', (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo')) 
                     		+ interval '1 month - 1 day')::date,         -- último dia do mês atual
                 		interval '1 day'
 	            )::date AS dia
             ), Data15Dias AS (
-            	SELECT (current_date - INTERVAL '15 days')::date AS data_menos_15
+            	SELECT ((SELECT NOW() AT TIME ZONE 'America/Sao_Paulo') - INTERVAL '15 days')::date AS data_menos_15
             ), DataUnion AS (
             		SELECT dia FROM CalendarioMes
             		UNION
@@ -139,14 +142,15 @@ class RelatorioRepository:
             	GROUP BY  cq.data_criacao
             )SELECT DISTINCT 
             	du.dia, 
-            	CASE WHEN cq.data_conclusao IS NOT NULL THEN TRUE ELSE FALSE END AS Feito,
-            	COALESCE(cp.pontos, 0) AS pontos 
+            	--CASE WHEN cq.data_conclusao IS NOT NULL THEN TRUE ELSE FALSE END AS Feito,
+            	COALESCE(sum(cp.pontos), 0) AS pontos 
             FROM DataUnion du
             LEFT JOIN conjunto_questao cq 
             	ON cq.data_criacao = du.dia 
             	AND cq.data_conclusao IS NOT NULL
             LEFT JOIN CalcularPontos15 cp
             	ON cp.DATA = du.dia 
+            GROUP BY du.dia  
             ORDER BY du.dia
         """), {"id_usuario": id_usuario}).all()
 
@@ -164,6 +168,8 @@ class RelatorioRepository:
         return None
 
     def buscar_metas_usuario(self, id_usuario: int) -> RelatorioAtividadeUsuario | None:
+        data_atual = datetime.now(TZ_BRASIL)
+
         row = self.db.execute(text("""
             SELECT 
 	            CASE 
@@ -176,14 +182,14 @@ class RelatorioRepository:
             FROM usuario u
             LEFT JOIN conjunto_questao cq 
             	ON cq.id_usuario  = u.id_usuario 
-            	AND cq.data_criacao::date = now()::date
+            	AND cq.data_criacao::date = CAST(:data_atual AS DATE)
             	AND cq.data_conclusao  IS NOT NULL 
             LEFT JOIN questao_usuario qu 
             	ON qu.id_conjunto_questao  = cq.id_conjunto_questao 
             WHERE u.id_usuario = :id_usuario
             GROUP BY u.id_disponibilidade
-        """), {"id_usuario": id_usuario}).first()
-
+        """), {"id_usuario": id_usuario, "data_atual": data_atual}).first()
+        print("Id usuário:", id_usuario, "Data atual:", data_atual)
         if row:
             return RelatorioAtividadeUsuario(
                 meta=row.meta,
@@ -191,7 +197,8 @@ class RelatorioRepository:
             )
         return row 
     
-    def buscar_ofensiva_usuario(self, id_usuario: int) -> dict | None:
+    def buscar_ofensiva_usuario(self, id_usuario: int) -> int | None:
+        data_atual = datetime.now(TZ_BRASIL)
         row = self.db.execute(text("""
             ;WITH datas AS (
                 -- Remover múltiplos registros no mesmo dia
@@ -232,11 +239,12 @@ class RelatorioRepository:
             SELECT 
                 dias_consecutivos 
             FROM grupo_ofensiva
-            WHERE fim_streak = NOW()::date
-        """), {"id_usuario": id_usuario}).first()
+            WHERE fim_streak = CAST(:data_atual - INTERVAL '1 day' AS DATE)
+            OR fim_streak = CAST(:data_atual AS DATE)
+        """), {"id_usuario": id_usuario, "data_atual": data_atual}).first()
+        print("Id usuário:", id_usuario, "Data atual:", data_atual)
         if row:
-            ofensiva = {
-                "ofensiva": row.dias_consecutivos
-            }
+            return row.dias_consecutivos
+        return None
         
     

@@ -25,12 +25,12 @@ class QuestaoPalavraCERFRepository:
             return QuestaoPalavraCerf(
                 id_questao_palavra_cerf=row.id_questao_palavra_cerf,
                 id_questao=row.id_questao,
-                A1=row.a1,
-                A2=row.a2,
-                B1=row.b1,
-                B2=row.b2,
-                C1=row.c1,
-                C2=row.c2
+                A1=row.A1,
+                A2=row.A2,
+                B1=row.B1,
+                B2=row.B2,
+                C1=row.C1,
+                C2=row.C2
             )
         
         return None

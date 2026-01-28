@@ -45,7 +45,7 @@ class QuestaoUsuarioRepository:
             id_usuario=id_usuario,
             id_questao=id_questao,
             id_conjunto_questao=id_conjunto_questao,
-            data_criacao=text("CURRENT_DATE")
+            data_criacao=text("(SELECT NOW() AT TIME ZONE 'America/Sao_Paulo')")
         )
         self.db.add(nova_questao_usuario)
         self.db.commit()

@@ -16,4 +16,4 @@ class ObjetivoUsuarioService:
     def deletar_objetivo_usuario(self, id_objetivo_usuario: int):
         data_atual = date.today()
         objetivo_usuario_repository = ObjetivoUsuarioRepository(self.db)
-        objetivo_usuario_repository.deletar_experiencia_idioma_usuario(id_objetivo_usuario, data_atual)
+        objetivo_usuario_repository.deletar_objetivo_usuario(id_objetivo_usuario, data_atual)

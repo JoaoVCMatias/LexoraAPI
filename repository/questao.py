@@ -61,8 +61,8 @@ class QuestaoRepository:
 	            on qu.id_questao  = q.id_questao 
 	            and qu.id_usuario = :id_usuario
             where q.id_tipo_questao = :id_tipo_questao
-            and (qu.acerto is null or (qu.acerto = FALSE and  qu.data_resposta + INTERVAL '1 day' > CURRENT_DATE)
-            or  (qu.acerto = TRUE and  qu.data_resposta + INTERVAL '3 day' > CURRENT_DATE))
+            and (qu.acerto is null or (qu.acerto = FALSE and  qu.data_resposta + INTERVAL '1 day' > (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo'))
+            or  (qu.acerto = TRUE and  qu.data_resposta + INTERVAL '3 day' > (SELECT NOW() AT TIME ZONE 'America/Sao_Paulo')))
             order by random()
             limit :qnt_questoes"""), {"id_usuario": id_usuario, "qnt_questoes": qnt_questoes, "id_tipo_questao": id_tipo_questao}).all()
         
@@ -111,7 +111,6 @@ class QuestaoRepository:
             {f"AND cq.id_conjunto_questao = :id_conjunto_questao" if id_conjunto_questao is not None else "AND cq.data_conclusao IS NULL"}
             ORDER BY cq.id_conjunto_questao, q.id_questao
         """), {"id_usuario": id_usuario, "id_conjunto_questao": id_conjunto_questao}).all()
-
         if not rows:
             return None
         
