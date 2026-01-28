@@ -21,19 +21,23 @@ class QuestaoPalavraCERFService:
         contador_match['B2'] = 0
         contador_match['C1'] = 0
         contador_match['C2'] = 0
+        query = ""
 
         for index, questao in df_questoes.iterrows():
-            verifica_existencia = QuestaoPalavraCERFRepository.buscar_questao_palavra_cerf(self, questao['id_questao'])
+            verifica_existencia = QuestaoPalavraCERFRepository.buscar_questao_palavra_cerf_por_id_questao(self, questao['id_questao'])
             if verifica_existencia is not None:
                 continue
             else:
                 for jindex, palavra in df_palavras.iterrows():
                     if (re.search(r'\b' + re.escape(palavra['descricao_palavra']) + r'\b', questao['resposta'], re.IGNORECASE) or re.search(r'\b' + re.escape(palavra['descricao_palavra']) + r'\b', questao['descricao_questao'], re.IGNORECASE)):
                         contador_match[palavra['CEFR']] += 1
-                QuestaoPalavraCERFRepository.inserir_questao_palavra_cerf(self, questao['id_questao'], contador_match['A1'], contador_match['A2'], contador_match['B1'], contador_match['B2'], contador_match['C1'], contador_match['C2'])        
+                query += QuestaoPalavraCERFRepository.inserir_questao_palavra_cerf(self, questao['id_questao'], contador_match['A1'], contador_match['A2'], contador_match['B1'], contador_match['B2'], contador_match['C1'], contador_match['C2'])
+                query += "; "
                 contador_match['A1'] = 0
                 contador_match['A2'] = 0
                 contador_match['B1'] = 0
                 contador_match['B2'] = 0
                 contador_match['C1'] = 0
                 contador_match['C2'] = 0
+
+        return query

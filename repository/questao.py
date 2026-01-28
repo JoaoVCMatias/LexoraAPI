@@ -216,4 +216,66 @@ class QuestaoRepository:
                 )
             )
         return relatorio
-    
+
+    def resultado_conjunto_questoes(self, id_usuario: int, id_conjunto: int) -> list[RelatorioDesempenhoUsuarioResponse] | None:
+        rows = self.db.execute(text("""
+            ;WITH ConjuntoQuestaoUsuario AS (
+	            SELECT 
+	            	MAX(cq.id_conjunto_questao) AS id_conjunto_questao 
+	            FROM conjunto_questao cq 
+	            WHERE cq.id_usuario = :id_usuario 
+                AND cq.id_conjunto_questao = :id_conjunto
+	            AND cq.data_conclusao IS NOT NULL
+            ), Sequencias AS (
+                SELECT qu.id_questao_usuario, qu.acerto,
+                       SUM(CASE WHEN qu.acerto  = FALSE THEN 1 ELSE 0 END) 
+                           OVER (ORDER BY qu.id_questao_usuario) AS grupo
+                FROM questao_usuario qu 
+                INNER JOIN ConjuntoQuestaoUsuario CQU
+                	ON CQU.id_conjunto_questao  = QU.id_conjunto_questao 
+            ), MaiorSequencia AS (
+            	SELECT MAX(contagem) AS maior_sequencia
+            	FROM (
+                	SELECT grupo, COUNT(*) AS contagem
+                	FROM Sequencias
+                	WHERE acerto = TRUE
+                	GROUP BY grupo
+            	) sub
+            )
+            SELECT 
+                cqu.id_conjunto_questao,
+            	AGE(cq.data_conclusao, cq.data_criacao) AS tempo,
+            	COALESCE(SUM(q.nivel * 100), 0) AS pontos,
+            	(CAST(SUM(CASE WHEN qu.acerto = TRUE THEN 1 ELSE 0 END) AS DECIMAL) / CAST(COUNT(qu.id_questao) AS DECIMAL)) * 100 
+            	AS porcentagem_acerto,
+            	COALESCE((SELECT maior_sequencia FROM MaiorSequencia), 0) AS sequencia_acerto
+            FROM ConjuntoQuestaoUsuario cqu
+            INNER JOIN conjunto_questao cq 
+            	ON cq.id_conjunto_questao = cqu.id_conjunto_questao
+            INNER JOIN questao_usuario qu 
+            	ON qu.id_conjunto_questao  = cqu.id_conjunto_questao
+            LEFT JOIN questao q 
+            	ON q.id_questao = qu.id_questao
+            	AND QU.acerto = TRUE
+            GROUP BY 
+                cqu.id_conjunto_questao,                        
+            	cq.data_criacao,
+            	cq.data_conclusao
+        """), {"id_usuario": id_usuario, "id_conjunto": id_conjunto}).all()
+
+        if not rows:
+            return None
+        
+        relatorio = []
+        for row in rows:
+            relatorio.append(
+                RelatorioDesempenhoUsuarioResponse(
+                    id_conjunto_questao=row.id_conjunto_questao,
+                    tempo=str(row.tempo),
+                    pontos=float(row.pontos),
+                    porcentagem_acerto=float(row.porcentagem_acerto),
+                    sequencia_acerto=int(row.sequencia_acerto),
+                    questoes=[] 
+                )
+            )
+        return relatorio

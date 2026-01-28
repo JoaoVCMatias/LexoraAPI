@@ -107,3 +107,92 @@ class QuestaoUsuarioRepository:
                 )
             )
         return questoes_usuario
+    
+    def buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario: int):
+        rows = self.db.execute(text("""
+            SELECT 
+                qu.id_questao_usuario,
+                qu.id_usuario,
+                qu.id_questao,
+                qu.id_conjunto_questao,
+                qu.data_resposta,
+                qu.acerto
+            FROM questao_usuario qu
+            WHERE qu.id_usuario = :id_usuario
+            and qu.data_resposta is not null
+        """), {"id_usuario": id_usuario}).all()
+        
+        questoes_usuario = []
+        for row in rows:
+            questoes_usuario.append(
+                QuestaoUsuario(
+                    id_questao_usuario=row.id_questao_usuario,
+                    id_usuario=row.id_usuario,
+                    id_questao=row.id_questao,
+                    id_conjunto_questao=row.id_conjunto_questao,
+                    data_resposta=row.data_resposta,
+                    acerto=row.acerto
+                )
+            )
+        return questoes_usuario
+
+    def buscar_questoes_usuario_por_id_questao(self, id_usuario: int, id_questao: int):
+        questoes_usuario = []
+        rows = self.db.execute(text("""
+            SELECT 
+                qu.id_questao_usuario,
+                qu.id_usuario,
+                qu.id_questao,
+                qu.id_conjunto_questao,
+                qu.data_resposta,
+                qu.acerto
+            FROM questao_usuario qu
+            WHERE qu.id_usuario = :id_usuario
+            and qu.id_questao = :id_questao
+        """), {"id_usuario": id_usuario, "id_questao": id_questao}).all()
+
+        if rows:
+            for row in rows:
+                questoes_usuario.append(
+                    QuestaoUsuario(
+                        id_questao_usuario=row.id_questao_usuario,
+                        id_usuario=row.id_usuario,
+                        id_questao=row.id_questao,
+                        id_conjunto_questao=row.id_conjunto_questao,
+                        data_resposta=row.data_resposta,
+                        acerto=row.acerto
+                    )   
+                )
+
+        return questoes_usuario
+
+    def buscar_questoes_respondidas_usuario_por_id_questao(self, id_usuario: int, id_questao: int):
+        questoes_usuario = []
+        rows = self.db.execute(text("""
+            SELECT 
+                qu.id_questao_usuario,
+                qu.id_usuario,
+                qu.id_questao,
+                qu.id_conjunto_questao,
+                qu.data_resposta,
+                qu.acerto
+            FROM questao_usuario qu
+            WHERE qu.id_usuario = :id_usuario
+            and qu.id_questao = :id_questao
+            and qu.data_resposta is not null
+        """), {"id_usuario": id_usuario, "id_questao": id_questao}).all()
+
+        if rows:
+            for row in rows:
+                questoes_usuario.append(
+                    QuestaoUsuario(
+                        id_questao_usuario=row.id_questao_usuario,
+                        id_usuario=row.id_usuario,
+                        id_questao=row.id_questao,
+                        id_conjunto_questao=row.id_conjunto_questao,
+                        data_resposta=row.data_resposta,
+                        acerto=row.acerto
+                    )   
+                )
+
+        return questoes_usuario
