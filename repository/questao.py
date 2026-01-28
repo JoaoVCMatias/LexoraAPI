@@ -102,7 +102,7 @@ class QuestaoRepository:
 	            END AS resposta,
                 qu.resposta_usuario
             FROM conjunto_questao cq 
-            INNER JOIN questao_usuario qu 
+            LEFT JOIN questao_usuario qu 
                 ON qu.id_usuario = cq.id_usuario 
                 AND qu.id_conjunto_questao = cq.id_conjunto_questao
             LEFT JOIN questao q 
@@ -113,20 +113,24 @@ class QuestaoRepository:
         """), {"id_usuario": id_usuario, "id_conjunto_questao": id_conjunto_questao}).all()
         if not rows:
             return None
+        
+        lista_questoes = []
+        for row in rows:
+            if row.id_questao:
+                lista_questoes.append(
+                    QuestoesUsuarioResponse(
+                        id_questao=row.id_questao,
+                        descricao_questao=row.descricao_questao,
+                        json_opcao=row.json_opcao,
+                        acerto=row.acerto,
+                        resposta=row.resposta,
+                        resposta_usuario=row.resposta_usuario
+                    )
+            )
 
         conjunto = UsuarioQuestaoReturn(
             id_conjunto_questao=rows[0].id_conjunto_questao,
-            questoes=[
-                QuestoesUsuarioResponse(
-                    id_questao=row.id_questao,
-                    descricao_questao=row.descricao_questao,
-                    json_opcao=row.json_opcao,
-                    acerto=row.acerto,
-                    resposta=row.resposta,
-                    resposta_usuario=row.resposta_usuario
-                )
-                for row in rows
-            ]
+            questoes=lista_questoes
         )
 
         return conjunto
