@@ -24,7 +24,7 @@ class QuestaoPalavraCERFService:
         query = ""
 
         for index, questao in df_questoes.iterrows():
-            verifica_existencia = QuestaoPalavraCERFRepository.buscar_questao_palavra_cerf(self, questao['id_questao'])
+            verifica_existencia = QuestaoPalavraCERFRepository.buscar_questao_palavra_cerf_por_id_questao(self, questao['id_questao'])
             if verifica_existencia is not None:
                 continue
             else:

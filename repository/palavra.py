@@ -93,7 +93,7 @@ class PalavraRepository:
 
         return palavras
 
-    def busca_palavra_por_descricao(self, descricao_palavra: str) -> Palavra | None:
+    def pesquisa_palavra_por_descricao_ou_traducao(self, descricao_palavra: str) -> Palavra | None:
         descricao_palavra = f"%{descricao_palavra}%"
         palavras = []
         rows = self.db.execute(text("""
@@ -105,6 +105,50 @@ class PalavraRepository:
             FROM palavra
             WHERE descricao_palavra ILIKE :descricao_palavra OR descricao_palavra_traducao ILIKE :descricao_palavra
         """), {"descricao_palavra": descricao_palavra}).all()
+        
+        for row in rows:
+            palavras.append(Palavra(
+                id_palavra=row.id_palavra,
+                descricao_palavra=row.descricao_palavra,
+                descricao_palavra_traducao=row.descricao_palavra_traducao,
+                CEFR=row.CEFR
+            ))
+        
+        return palavras
+    
+    def busca_palavra_por_descricao(self, descricao_palavra: str) -> Palavra | None:
+        palavras = []
+        rows = self.db.execute(text("""
+            SELECT 
+                id_palavra,
+                descricao_palavra,
+                descricao_palavra_traducao,
+                "CEFR"
+            FROM palavra
+            WHERE descricao_palavra ILIKE :descricao_palavra
+        """), {"descricao_palavra": descricao_palavra}).all()
+        
+        for row in rows:
+            palavras.append(Palavra(
+                id_palavra=row.id_palavra,
+                descricao_palavra=row.descricao_palavra,
+                descricao_palavra_traducao=row.descricao_palavra_traducao,
+                CEFR=row.CEFR
+            ))
+        
+        return palavras
+    
+    def buscar_palavra_por_traducao(self, palavra_traduzida: str) -> Palavra | None:
+        palavras = []
+        rows = self.db.execute(text("""
+            SELECT 
+                id_palavra,
+                descricao_palavra,
+                descricao_palavra_traducao,
+                "CEFR"
+            FROM palavra
+            WHERE descricao_palavra_traducao ILIKE :palavra_traduzida
+        """), {"palavra_traduzida": palavra_traduzida}).all()
         
         for row in rows:
             palavras.append(Palavra(

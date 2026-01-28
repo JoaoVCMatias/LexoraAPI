@@ -8,7 +8,7 @@ class QuestaoObjetivoRepository:
         self.db = db
 
     def inserir_questao_objetivo(self, id_questao: int, id_objetivo: int, qtd_palavras: int):
-        return "INSERT INTO questao_objetivo (id_questao, id_objetivo, qtd_palavras) VALUES ("+str(id_questao)+", "+str(id_objetivo)+", "+str(qtd_palavras)+")"
+        return "INSERT INTO questao_objetivo (id_questao, id_objetivo, qtq_palavras) VALUES ("+str(id_questao)+", "+str(id_objetivo)+", "+str(qtd_palavras)+")"
         self.db.execute(text("""
             INSERT INTO questao_objetivo (id_questao, id_objetivo, qtd_palavras)
             VALUES (:id_questao, :id_objetivo, :qtd_palavras)
@@ -21,7 +21,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo,
                 id_questao,
                 id_objetivo,
-                qtd_palavras
+                qtq_palavras
             FROM questao_objetivo
             WHERE id_questao = :id_questao AND id_objetivo = :id_objetivo
         """), {"id_questao": id_questao, "id_objetivo": id_objetivo}).first()
@@ -31,7 +31,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo=row.id_questao_objetivo,
                 id_questao=row.id_questao,
                 id_objetivo=row.id_objetivo,
-                qtd_palavras=row.qtd_palavras
+                qtd_palavras=row.qtq_palavras
             )
         
         return row
@@ -42,7 +42,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo,
                 id_questao,
                 id_objetivo,
-                qtd_palavras
+                qtq_palavras
             FROM questao_objetivo
             WHERE id_objetivo = :id_objetivo
         """), {"id_objetivo": id_objetivo}).all()
@@ -53,7 +53,7 @@ class QuestaoObjetivoRepository:
                 id_questao_objetivo=row.id_questao_objetivo,
                 id_questao=row.id_questao,
                 id_objetivo=row.id_objetivo,
-                qtd_palavras=row.qtd_palavras
+                qtd_palavras=row.qtq_palavras
             ))
         
         return questoes_objetivo

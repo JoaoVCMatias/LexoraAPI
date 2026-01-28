@@ -11,12 +11,12 @@ class QuestaoPalavraCERFRepository:
             SELECT 
                 id_questao_palavra_cerf,
                 id_questao,
-                A1,
-                A2,
-                B1,
-                B2,
-                C1,
-                C2
+                "A1",
+                "A2",
+                "B1",
+                "B2",
+                "C1",
+                "C2"
             FROM questao_palavra_cerf
             WHERE id_questao = :id_questao
         """), {"id_questao": id_questao}).first()

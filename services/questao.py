@@ -68,6 +68,7 @@ class QuestaoService:
         df_questao_objetivo = pd.DataFrame()
         df_questoes_duplicadas = pd.DataFrame()
         fibonacci_sequence = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+        tabela_retencao = self.calcula_taxa_esquecimento(id_usuario)
 
         if id_conjunto_questao is None:
             conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
@@ -97,28 +98,21 @@ class QuestaoService:
             df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
             df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
             df_questoes_respondidas = df_questoes_respondidas[~df_questoes_respondidas['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
+            
             for index, row_questao_respondida in df_questoes_respondidas.iterrows():
-                historico_questao = df_questoes_respondidas[df_questoes_respondidas['id_questao'] == row_questao_respondida['id_questao']]
-                historico_questao = pd.DataFrame(historico_questao.sort_values(by='data_resposta'))
-                contador_acertos = 0
-                ultimo = historico_questao.iloc[-1]
-
-                for i in range(len(historico_questao)):
-                    if historico_questao.iloc[i]['acerto'] and (date.today() - pd.to_datetime(historico_questao.iloc[i]['data_resposta']).date()).days > 0:
-                        contador_acertos = contador_acertos + 1
-
-                if contador_acertos > 0:
-                    data_ultima_resposta = pd.to_datetime(ultimo['data_resposta']).date()
-                    qtd_dias_repetir = fibonacci_sequence[contador_acertos - 1] if contador_acertos - 1 < len(fibonacci_sequence) else fibonacci_sequence[-1]
-
-                    if data_ultima_resposta + pd.Timedelta(days=qtd_dias_repetir) >= pd.to_datetime(date.today()).date():
-                        questao = df_questoes[df_questoes['id_questao'] == row_questao_respondida['id_questao']].to_dict(orient='records')[0]
-                
-                if row_questao_respondida['acerto'] is True:
-                    id_questao = row_questao_respondida['id_questao']
-                    data_resposta = row_questao_respondida['data_resposta']
-                    dias_desde_resposta = (date.today() - pd.to_datetime(data_resposta).date()).days
-                    # Sequência de Fibonacci para espaçamento                    
+                df_historico_questao = self.calcula_tempo_resposta_historico_questao(id_usuario, row_questao_respondida['id_questao'])
+                if df_historico_questao is not None and not df_historico_questao.empty:
+                    # df_historico_questao = pd.DataFrame(historico.__dict__ for historico in historico_questao)     
+                    dias_desde_ultima_resposta = (date.today() - row_questao_respondida['data_resposta'].date()).days
+                    taxa_esquecimento = 0
+                    if not tabela_retencao[tabela_retencao['dias_entre_questoes'] == dias_desde_ultima_resposta].empty:
+                        if tabela_retencao[tabela_retencao[dias_desde_ultima_resposta]]['data_resposta'] > 0:
+                            taxa_esquecimento = 1 - tabela_retencao[tabela_retencao[dias_desde_ultima_resposta]]['taxa_acerto']
+                    tentativas = len(df_historico_questao)
+                    if tentativas-1 < len(fibonacci_sequence) and taxa_esquecimento > 0:
+                        intervalo_fibonacci = fibonacci_sequence[tentativas-1]
+                        if dias_desde_ultima_resposta >= intervalo_fibonacci:
+                            questoes_filtradas = pd.concat([questoes_filtradas, df_questoes[df_questoes['id_questao'] == row_questao_respondida['id_questao']]])          
 
         # busca quuestoes que possuem mais de um objetivo relacionado ao usuario
         df_questao_objetivo = pd.DataFrame(questao_objetivo.__dict__ for questao_objetivo in questao_objetivo)
@@ -135,18 +129,71 @@ class QuestaoService:
             while questao is None and i < len(palavras_objetivos):
                 palavra = PalavraRepository.buscar_palavra_por_id(self, str(palavras_objetivos[i]))
                 if palavra is not None:
-                    questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
-                    if not questoes_filtradas.empty:
-                        questao = questoes_filtradas[questoes_filtradas['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
-                    else:
-                        questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
-                        if not questoes_filtradas.empty:
-                            questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
+                    df_questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                    if not df_questoes_filtradas.empty:
+                        questoes_filtradas = pd.concat([questoes_filtradas, df_questoes_filtradas])
+                    
+                    df_questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                    if not df_questoes_filtradas.empty:
+                        questoes_filtradas = pd.concat([questoes_filtradas, df_questoes_filtradas])
                 i += 1
+            if not questoes_filtradas.empty and len(questoes_filtradas) > 0:
+                questao = questoes_filtradas.sample(frac=1).to_dict(orient='records')[0]
+            else:
+                questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                if not questoes_filtradas.empty:
+                    questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
+                    
             if questao is None:
                 questao = df_questoes.sample(frac=1).to_dict(orient='records')[0]
 
+        # self.busca_palavras_traducao(questao)
+        # print(questao['id_questao'])
+        # print(self.calcula_tempo_resposta_historico_questao(id_usuario, 37))
+        # print(self.calcula_tempo_resposta_conjunto(id_usuario, 37, 3))
+
         return questao
+
+    def busca_palavras_traducao(self, questao: dict):
+        palavras_descricao = questao['descricao_questao'].split()
+        opcoes_questao = json.loads(questao['json_opcao'])
+        print(questao['descricao_questao'])
+        i = 0
+
+        print('######### questao #############')
+        for palavra_desc in palavras_descricao:
+            palavra_desc = re.sub(r'_', '', palavra_desc)  # Remove underlines
+            palavra_traduzida = PalavraRepository.busca_palavra_por_descricao(self, palavra_desc)
+
+            if palavra_traduzida:
+                df_palavra_traduzida = pd.DataFrame(palavra_t.__dict__ for palavra_t in palavra_traduzida)
+                df_palavra_traduzida = df_palavra_traduzida[['descricao_palavra', 'descricao_palavra_traducao']]
+                df_palavra_traduzida = df_palavra_traduzida.drop_duplicates()
+                for index, traducao in df_palavra_traduzida.iterrows():
+                    if traducao['descricao_palavra_traducao']:
+                        print(i)
+                        print(palavra_desc)
+                        print(traducao['descricao_palavra_traducao'])
+                        print('######')
+            i = i + 1
+
+        i = 0
+        print("######### OPÇÕES #########")
+        for opc in opcoes_questao:
+            palavra_traduzida = PalavraRepository.busca_palavra_por_descricao(self, opc)
+
+            if palavra_traduzida:
+                df_palavra_traduzida = pd.DataFrame(palavra_t.__dict__ for palavra_t in palavra_traduzida)
+                df_palavra_traduzida = df_palavra_traduzida[['descricao_palavra', 'descricao_palavra_traducao']]
+                df_palavra_traduzida = df_palavra_traduzida.drop_duplicates()
+                for index, traducao in df_palavra_traduzida.iterrows():
+                    if traducao['descricao_palavra_traducao']:
+                        print(i)
+                        print(opc)
+                        print(traducao['descricao_palavra_traducao'])
+                        print('#########')   
+            i = i + 1
+
 
     def gerar_questao_id(self, id_usuario: int):
         # id_objetivo_usuario = ObjetivoUsuarioRepository.pesquisar_objetivo_usuario(self, id_usuario)
@@ -259,3 +306,124 @@ class QuestaoService:
     def buscar_questoes_usuario_por_conjunto(self, id_usuario: int, id_conjunto_questao: int | None = None):
         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         return questoes
+
+    def calcula_dificuldade_questao(self, id_questao: int):
+        dificuldade = 0
+        questao_cerf = QuestaoPalavraCERFRepository.buscar_questao_palavra_cerf_por_id_questao(self, id_questao)
+
+        if questao_cerf:
+            soma = (1 * questao_cerf.A1) + ( 2 * questao_cerf.A2) + (3 * questao_cerf.B1) + (4 * questao_cerf.B2) + (5 * questao_cerf.C1) + (6 * questao_cerf.C2)
+            dificuldade = soma / 6
+
+        return dificuldade
+
+    def calcula_desempenho_conjunto(self, id_conjunto: int):
+        conjunto = QuestaoUsuarioRepository.buscar_questoes_por_conjunto_id(self, id_conjunto)
+        total_questoes = len(conjunto)
+        acertos = sum(1 for q in conjunto if q.acerto)
+        desempenho = (acertos / total_questoes) if total_questoes > 0 else 0
+
+        return desempenho
+    
+    def calcula_desempenho_questao_usuario(self, id_usuario: int, id_questao: int):
+        questoes_usuario = QuestaoUsuarioRepository.buscar_questoes_usuario_por_id_questao(self, id_usuario, id_questao)
+        desempenho = 0
+
+        if questoes_usuario:
+            df_questoes_usuario = pd.DataFrame(questao_usuario.__dict__ for questao_usuario in questoes_usuario)
+            df_questoes_usuario = df_questoes_usuario.sort_values(by="data_resposta")
+            total_respondidas = len(df_questoes_usuario)
+            total_acertos = df_questoes_usuario['acerto'].sum()
+            desempenho = (total_acertos / total_respondidas) if total_respondidas > 0 else 0
+
+        return desempenho
+    
+    def calcula_tempo_resposta_conjunto(self, id_usuario: int, id_questao: int, id_conjunto: int):
+        conjunto = ConjuntoQuestaoRepository.buscar_conjunto_questao_por_id(self, id_conjunto)
+        questoes_conjunto = QuestaoUsuarioRepository.buscar_questoes_por_conjunto_id(self, id_conjunto)
+
+        if questoes_conjunto:
+            df_questoes_conjunto = pd.DataFrame(questao_conjunto.__dict__ for questao_conjunto in questoes_conjunto) 
+            df_questoes_conjunto = df_questoes_conjunto.sort_values(by="data_resposta")
+            lista_tempo_resposta = []
+
+            for index, row in df_questoes_conjunto.iterrows():
+                if index == 0:
+                    lista_tempo_resposta.append(
+                        (row['data_resposta'] - conjunto.data_criacao).total_seconds()
+                    )
+                else:
+                    lista_tempo_resposta.append(
+                        (row['data_resposta'] - df_questoes_conjunto.iloc[index - 1]['data_resposta']).total_seconds()
+                    )
+            
+            df_questoes_conjunto['tempo_resposta'] = lista_tempo_resposta
+            
+            return df_questoes_conjunto
+        else:
+            return None
+    
+    def calcula_tempo_resposta_historico_questao(self, id_usuario: int, id_questao: int):
+        historico = QuestaoUsuarioRepository.buscar_questoes_respondidas_usuario_por_id_questao(self, id_usuario, id_questao)
+
+        if historico:
+            df_historico = pd.DataFrame(h.__dict__ for h in historico)
+            lista_tempo_resposta = []
+
+            for index, hist in df_historico.iterrows():
+                if hist['id_conjunto_questao'] is None:
+                    df_historico = df_historico.drop(index)
+                else:
+                    conjunto = ConjuntoQuestaoRepository.buscar_conjunto_questao_por_id(self, hist['id_conjunto_questao'])
+                    questoes_conjunto = QuestaoUsuarioRepository.buscar_questoes_por_conjunto_id(self, hist['id_conjunto_questao'])
+                    df_questoes_conjunto = pd.DataFrame(questao_conjunto.__dict__ for questao_conjunto in questoes_conjunto)
+                    df_questoes_conjunto = df_questoes_conjunto.sort_values(by="data_resposta")
+                    index_questao = df_questoes_conjunto[df_questoes_conjunto['id_questao']==id_questao].index
+                    if index_questao == 0:
+                        lista_tempo_resposta.append(
+                            (hist['data_resposta'] - conjunto.data_criacao).total_seconds()
+                        )
+                    else:
+                        # print(hist['data_resposta'])
+                        # print(df_questoes_conjunto.iloc[index_questao - 1]['data_resposta'])
+                        # print(hist['data_resposta'] - df_questoes_conjunto.iloc[index_questao - 1]['data_resposta'])
+                        lista_tempo_resposta.append(
+                            (hist['data_resposta'] - df_questoes_conjunto.iloc[index_questao - 1]['data_resposta']).dt.total_seconds()
+                        )
+            df_historico['tempo_resposta'] = lista_tempo_resposta
+            return df_historico
+        else:
+            return None
+
+    def calcula_taxa_esquecimento(self, id_usuario: int):
+        questoes_respondidas = QuestaoUsuarioRepository.buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario)
+        colunas = {'qtd_repetidas': [0], 'dias_entre_questoes': [0], 'qtd_acertos': [0]}
+        tabela_acertos = pd.DataFrame(colunas)
+        for questao in questoes_respondidas:
+            # print(questao.id_questao, questao.acerto)
+            historico = self.calcula_tempo_resposta_historico_questao(id_usuario, questao.id_questao)
+            if historico is not None and not historico.empty:
+                if len(historico) > 1:
+                    dias_entre_questoes = historico['data_resposta'].diff().dt.days.fillna(0).tolist()[1:]
+                    # print(historico[['data_resposta', 'tempo_resposta']])
+                    if tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes].empty:
+                        tabela_acertos['dias_entre_questoes'] = dias_entre_questoes
+                        tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_repetidas'] = 1
+                        if questao.acerto:
+                            tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] = 1
+                        else:
+                            tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] = 0
+                    else:
+                        tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_repetidas'] += 1
+                        if questao.acerto:
+                            tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] += 1
+                        else:
+                            if (tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] > 1).bool():
+                                tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] -= 1
+                            else:
+                                tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] = 0
+        if not tabela_acertos.empty:
+            tabela_acertos['taxa_acerto'] = tabela_acertos['qtd_acertos'] / tabela_acertos['qtd_repetidas']
+            # print(tabela_acertos)
+
+        return tabela_acertos
