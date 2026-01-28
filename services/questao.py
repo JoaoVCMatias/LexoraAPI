@@ -35,6 +35,7 @@ class QuestaoService:
 
         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         meta = RelatorioRepository.buscar_metas_usuario(self, id_usuario)
+        print(meta.meta)
         
         if questoes is not None:
             if len(questoes.questoes) < meta.meta:
@@ -45,11 +46,12 @@ class QuestaoService:
                         i += 1
                         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         else:
-            for i in meta.meta:
+            while i < meta.meta:
                 id_questao = self.buscar_questao(id_usuario).get("id_questao")
                 QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
+                i = i + 1
             questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
-
+        
         return questoes
         
     def buscar_questoes_usuario_old(self, id_usuario: int):
@@ -74,12 +76,21 @@ class QuestaoService:
             conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
             if conjunto_ativo is not None and len(conjunto_ativo) > 0:
                 id_conjunto_questao = conjunto_ativo[0].id_conjunto_questao
-        else:
-            conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questao_por_id(self, id_conjunto_questao)
+            else:
+                id_conjunto_questao = ConjuntoQuestaoRepository.criar_conjunto_questao(self, id_usuario)
+
+        if id_conjunto_questao is None:      
+            conjunto_ativo = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
+            id_conjunto_questao = conjunto_ativo[0].id_conjunto_questao
+
+        conjunto_questao = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
+        print(conjunto_questao)
         
-        conjunto_questao = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao).questoes
-        df_conjunto_questao = pd.DataFrame(questao_conjunto.__dict__ for questao_conjunto in conjunto_questao)
-        df_questoes = df_questoes[~df_questoes['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
+        if conjunto_questao:
+            conjunto_questao = conjunto_questao.questoes
+        if conjunto_questao:
+            df_conjunto_questao = pd.DataFrame(questao_conjunto.__dict__ for questao_conjunto in conjunto_questao)
+            df_questoes = df_questoes[~df_questoes['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
 
         # Buscar palavras relacionadas aos objetivos do usuário
         if usuario_objetivos is not None and len(usuario_objetivos) > 0:

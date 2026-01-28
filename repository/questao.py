@@ -105,7 +105,7 @@ class QuestaoRepository:
             INNER JOIN questao_usuario qu 
                 ON qu.id_usuario = cq.id_usuario 
                 AND qu.id_conjunto_questao = cq.id_conjunto_questao
-            INNER JOIN questao q 
+            LEFT JOIN questao q 
                 ON q.id_questao = qu.id_questao 
             WHERE cq.id_usuario = :id_usuario
             {f"AND cq.id_conjunto_questao = :id_conjunto_questao" if id_conjunto_questao is not None else "AND cq.data_conclusao IS NULL"}

@@ -189,7 +189,7 @@ class RelatorioRepository:
                 meta=row.meta,
                 atividades_feitas=row.atividades_realizadas
             )
-        return None 
+        return row 
     
     def buscar_ofensiva_usuario(self, id_usuario: int) -> dict | None:
         row = self.db.execute(text("""
