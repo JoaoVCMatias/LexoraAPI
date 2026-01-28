@@ -131,6 +131,41 @@ class QuestaoRepository:
 
         return conjunto
     
+    def buscar_questao_ativa_usuario(self, id_usuario: int) -> UsuarioQuestaoReturn | None:
+        row = self.db.execute(text(f"""
+            SELECT 
+                cq.id_conjunto_questao, 
+                q.id_questao, 
+                q.descricao_questao,                  
+                q.json_opcao, 
+                qu.acerto,
+                CASE 
+		            WHEN qu.acerto IS NOT NULL THEN q.resposta
+		            ELSE NULL
+	            END AS resposta,
+                qu.resposta_usuario
+            FROM conjunto_questao cq 
+            INNER JOIN questao_usuario qu 
+                ON qu.id_usuario = cq.id_usuario 
+                AND qu.id_conjunto_questao = cq.id_conjunto_questao
+            LEFT JOIN questao q 
+                ON q.id_questao = qu.id_questao 
+            WHERE cq.id_usuario = :id_usuario AND cq.data_conclusao IS NULL and qu.data_resposta IS NULL
+            ORDER BY cq.id_conjunto_questao, q.id_questao
+        """), {"id_usuario": id_usuario}).first()
+
+        if not row:
+            return None
+        else:
+            return QuestoesUsuarioResponse(
+                    id_questao=row.id_questao,
+                    descricao_questao=row.descricao_questao,
+                    json_opcao=row.json_opcao,
+                    acerto=row.acerto,
+                    resposta=row.resposta,
+                    resposta_usuario=row.resposta_usuario
+                )
+    
     def responder_questao(self, id_usuario: int, id_questao: int, correta: bool, resposta_usuario: str, id_conjunto_questao: int, data_resposta: date):
         print("id_usuario:", id_usuario, "id_questao:", id_questao, "correta:", correta, "id_conjunto_questao:", id_conjunto_questao)
         self.db.execute(text("""

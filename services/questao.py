@@ -239,7 +239,12 @@ class QuestaoService:
 
         # QuestaoRepository.inserir_questao_usuario(self, id_usuario, ids_questao, id_conjunto, date_atual) 
         # return self.buscar_questoes_usuario(id_usuario)
-        return self.buscar_questao(id_usuario)
+        return self.buscar_questao_ativa(id_usuario)
+
+    def buscar_questao_ativa(self, id_usuario):
+        questoes_ativas = QuestaoRepository.buscar_questao_ativa_usuario(self, id_usuario)
+        return questoes_ativas
+
 
     def gerar_questao_id_old(self, id_usuario: int):
         questoes_usuario = self.buscar_questoes_usuario_old(id_usuario)
