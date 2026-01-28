@@ -51,6 +51,7 @@ class RelatorioRepository:
             		rc.id_usuario, 
             		SUM(rc.nivel * 100) AS pontos_totais  
             	FROM RelacaoCompleta rc
+                WHERE rc.acerto = true
             	GROUP BY rc.id_usuario
             ), Sequencias AS (
             	SELECT 
