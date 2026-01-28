@@ -27,6 +27,7 @@ class QuestaoService:
         self.db = db
 
     def buscar_questoes_usuario(self, id_usuario: int):
+        
         i=0
         conjunto_questoes_ativa = ConjuntoQuestaoRepository.buscar_conjunto_questoes_ativas_usuario(self, id_usuario)
         if conjunto_questoes_ativa is not None and len(conjunto_questoes_ativa) > 0:
@@ -57,6 +58,10 @@ class QuestaoService:
         return QuestaoRepository.buscar_questoes_usuario(self, id_usuario, None) 
     
     def buscar_questao(self, id_usuario: int, id_conjunto_questao: int = None):
+        questao_usuario_cadastra = self.buscar_questoes_usuario_old(id_usuario)
+        if questao_usuario_cadastra is not None and len(questao_usuario_cadastra.questoes) > 0:
+            return questao_usuario_cadastra
+        
         todas_questoes = QuestaoRepository.buscar_todas_questoes(self)
         df_questoes = pd.DataFrame(question.__dict__ for question in todas_questoes)
         usuario_objetivos = ObjetivoUsuarioRepository.pesquisar_objetivos_usuario(self, id_usuario)
