@@ -26,7 +26,7 @@ def gerar_questoes(credentials: HTTPAuthorizationCredentials = Depends(security)
     id_usuario = autenticacao_service.token_to_id_usuario(token)
     service = QuestaoService(db)
     service.buscar_questoes_usuario(id_usuario)
-    result = service.gerar_questao_id(id_usuario)
+    result = service.buscar_questoes_usuario_old(id_usuario)
     return result
 
 @router.get("/ConjuntoQuestao")

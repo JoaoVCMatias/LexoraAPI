@@ -49,7 +49,12 @@ class QuestaoService:
                         questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
         else:
             while i < meta.meta:
-                id_questao = self.buscar_questao(id_usuario).get("id_questao")
+                print("inserindo questão ", i, " de ", meta.meta)
+                questao = self.buscar_questao(id_usuario)
+                while questao is None:
+                    questao = self.buscar_questao(id_usuario)
+                print(questao)
+                id_questao = questao.get("id_questao")
                 QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, id_questao, id_conjunto_questao)
                 i = i + 1
             questoes = QuestaoRepository.buscar_questoes_usuario(self, id_usuario, id_conjunto_questao)
@@ -60,10 +65,6 @@ class QuestaoService:
         return QuestaoRepository.buscar_questoes_usuario(self, id_usuario, None) 
     
     def buscar_questao(self, id_usuario: int, id_conjunto_questao: int = None):
-        questao_usuario_cadastra = self.buscar_questoes_usuario_old(id_usuario)
-        
-        if questao_usuario_cadastra is not None and len(questao_usuario_cadastra.questoes) > 0:
-            return questao_usuario_cadastra
         print("Buscando nova questão...")
         todas_questoes = QuestaoRepository.buscar_todas_questoes(self)
         df_questoes = pd.DataFrame(question.__dict__ for question in todas_questoes)
@@ -113,74 +114,61 @@ class QuestaoService:
 
         # busca questoes que o usuario ja respondeu para revisão (memoria espaçada) usando a formula de fibonacci
         questoes_respondidas = QuestaoUsuarioRepository.buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario) 
-        meta = RelatorioRepository.buscar_metas_usuario(self, id_usuario)
-        questoes_escolhidas = []
-        for i in range(meta.meta):
             
-            if questoes_respondidas is not None and len(questoes_respondidas) > 0:
-                df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
-                df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
-                df_questoes_respondidas = df_questoes_respondidas[~df_questoes_respondidas['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
-
-                for index, row_questao_respondida in df_questoes_respondidas.iterrows():
-                    df_historico_questao = self.calcula_tempo_resposta_historico_questao(id_usuario, row_questao_respondida['id_questao'])
-                    if df_historico_questao is not None and not df_historico_questao.empty:
-                        # df_historico_questao = pd.DataFrame(historico.__dict__ for historico in historico_questao)     
-                        dias_desde_ultima_resposta = (date.today() - row_questao_respondida['data_resposta'].date()).days
-                        taxa_esquecimento = 0
-                        if not tabela_retencao[tabela_retencao['dias_entre_questoes'] == dias_desde_ultima_resposta].empty:
-                            if tabela_retencao[tabela_retencao[dias_desde_ultima_resposta]]['data_resposta'] > 0:
-                                taxa_esquecimento = 1 - tabela_retencao[tabela_retencao[dias_desde_ultima_resposta]]['taxa_acerto']
-                        tentativas = len(df_historico_questao)
-                        if tentativas-1 < len(fibonacci_sequence) and taxa_esquecimento > 0:
-                            intervalo_fibonacci = fibonacci_sequence[tentativas-1]
-                            if dias_desde_ultima_resposta >= intervalo_fibonacci:
-                                questoes_filtradas = pd.concat([questoes_filtradas, df_questoes[df_questoes['id_questao'] == row_questao_respondida['id_questao']]])          
-
-            # busca quuestoes que possuem mais de um objetivo relacionado ao usuario
-            df_questao_objetivo = pd.DataFrame(questao_objetivo.__dict__ for questao_objetivo in questao_objetivo)
-            ids = df_questao_objetivo['id_questao'].tolist() if not df_questao_objetivo.empty else []
-            if ids:
-                df_questoes_duplicadas = df_questoes[df_questoes['id_questao'].isin(ids)].drop_duplicates(subset=['id_questao'])
-            if not df_questoes_duplicadas.empty:
-                df_questoes = df_questoes_duplicadas
-
-            # Filtrar questões que contenham as palavras relacionadas aos objetivos
-            if palavras_objetivos is not None and len(palavras_objetivos) > 0:
-                i = 0
-                random.shuffle(palavras_objetivos)
-                while questao is None and i < len(palavras_objetivos):
-                    palavra = PalavraRepository.buscar_palavra_por_id(self, str(palavras_objetivos[i]))
-                    if palavra is not None:
-                        df_questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
-                        if not df_questoes_filtradas.empty:
-                            questoes_filtradas = pd.concat([questoes_filtradas, df_questoes_filtradas])
-
-                        df_questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
-                        if not df_questoes_filtradas.empty:
-                            questoes_filtradas = pd.concat([questoes_filtradas, df_questoes_filtradas])
-                    i += 1
-                if not questoes_filtradas.empty and len(questoes_filtradas) > 0:
-                    questao = questoes_filtradas.sample(frac=1).to_dict(orient='records')[0]
-                else:
-                    questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
-                    if not questoes_filtradas.empty:
-                        questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
-
-                if questao is None:
-                    questao = df_questoes.sample(frac=1).to_dict(orient='records')[0]
-            questoes_escolhidas.append(questao)
-     
-
-        for questao in questoes_escolhidas:
-            print(f"Questão selecionada: {questao['id_questao']}")
-            QuestaoUsuarioRepository.criar_questao_usuario(self, id_usuario, questao['id_questao'], id_conjunto_questao)
+        if questoes_respondidas is not None and len(questoes_respondidas) > 0:
+            df_questoes_respondidas = pd.DataFrame(questao_respondida.__dict__ for questao_respondida in questoes_respondidas)
+            df_questoes_respondidas = df_questoes_respondidas[['id_questao', 'data_resposta', 'acerto']]
+            df_questoes_respondidas = df_questoes_respondidas[~df_questoes_respondidas['id_questao'].isin(df_conjunto_questao['id_questao'].tolist())]
+            for index, row_questao_respondida in df_questoes_respondidas.iterrows():
+                df_historico_questao = self.calcula_tempo_resposta_historico_questao(id_usuario, row_questao_respondida['id_questao'])
+                if df_historico_questao is not None and not df_historico_questao.empty:
+                    # df_historico_questao = pd.DataFrame(historico.__dict__ for historico in historico_questao)     
+                    dias_desde_ultima_resposta = (date.today() - row_questao_respondida['data_resposta'].date()).days
+                    taxa_esquecimento = 0
+                    if not tabela_retencao[tabela_retencao['dias_entre_questoes'] == dias_desde_ultima_resposta].empty:
+                        if tabela_retencao[tabela_retencao[dias_desde_ultima_resposta]]['data_resposta'] > 0:
+                            taxa_esquecimento = 1 - tabela_retencao[tabela_retencao[dias_desde_ultima_resposta]]['taxa_acerto']
+                    tentativas = len(df_historico_questao)
+                    if tentativas-1 < len(fibonacci_sequence) and taxa_esquecimento > 0:
+                        intervalo_fibonacci = fibonacci_sequence[tentativas-1]
+                        if dias_desde_ultima_resposta >= intervalo_fibonacci:
+                            questoes_filtradas = pd.concat([questoes_filtradas, df_questoes[df_questoes['id_questao'] == row_questao_respondida['id_questao']]])          
+        # busca quuestoes que possuem mais de um objetivo relacionado ao usuario
+        df_questao_objetivo = pd.DataFrame(questao_objetivo.__dict__ for questao_objetivo in questao_objetivo)
+        ids = df_questao_objetivo['id_questao'].tolist() if not df_questao_objetivo.empty else []
+        if ids:
+            df_questoes_duplicadas = df_questoes[df_questoes['id_questao'].isin(ids)].drop_duplicates(subset=['id_questao'])
+        if not df_questoes_duplicadas.empty:
+            df_questoes = df_questoes_duplicadas
+        # Filtrar questões que contenham as palavras relacionadas aos objetivos
+        if palavras_objetivos is not None and len(palavras_objetivos) > 0:
+            i = 0
+            random.shuffle(palavras_objetivos)
+            while questao is None and i < len(palavras_objetivos):
+                palavra = PalavraRepository.buscar_palavra_por_id(self, str(palavras_objetivos[i]))
+                if palavra is not None:
+                    df_questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                    if not df_questoes_filtradas.empty:
+                        questoes_filtradas = pd.concat([questoes_filtradas, df_questoes_filtradas])
+                    df_questoes_filtradas = df_questoes[df_questoes['resposta'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                    if not df_questoes_filtradas.empty:
+                        questoes_filtradas = pd.concat([questoes_filtradas, df_questoes_filtradas])
+                i += 1
+            if not questoes_filtradas.empty and len(questoes_filtradas) > 0:
+                questao = questoes_filtradas.sample(frac=1).to_dict(orient='records')[0]
+            else:
+                questoes_filtradas = df_questoes[df_questoes['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)]
+                if not questoes_filtradas.empty:
+                    questao = questoes_filtradas[questoes_filtradas['descricao_questao'].str.contains('\\b'+palavra.descricao_palavra+'\\b', case=False, na=False)].sample(frac=1).to_dict(orient='records')[0]
+            if questao is None:
+                questao = df_questoes.sample(frac=1).to_dict(orient='records')[0]
+    
         # self.busca_palavras_traducao(questao)
         # print(questao['id_questao'])
         # print(self.calcula_tempo_resposta_historico_questao(id_usuario, 37))
         # print(self.calcula_tempo_resposta_conjunto(id_usuario, 37, 3))
 
-        return self.buscar_questoes_usuario_old(id_usuario)
+        return questao
 
     def busca_palavras_traducao(self, questao: dict):
         palavras_descricao = questao['descricao_questao'].split()
