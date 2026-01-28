@@ -111,7 +111,6 @@ class QuestaoRepository:
             {f"AND cq.id_conjunto_questao = :id_conjunto_questao" if id_conjunto_questao is not None else "AND cq.data_conclusao IS NULL"}
             ORDER BY cq.id_conjunto_questao, q.id_questao
         """), {"id_usuario": id_usuario, "id_conjunto_questao": id_conjunto_questao}).all()
-
         if not rows:
             return None
 
