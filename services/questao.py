@@ -132,9 +132,10 @@ class QuestaoService:
                     dias_desde_ultima_resposta = (date.today() - row_questao_respondida['data_resposta'].date()).days
                     taxa_esquecimento = 0
                     if dias_desde_ultima_resposta > 0:
-                        if tabela_retencao[str(dias_desde_ultima_resposta)]:
-                            if tabela_retencao[str(dias_desde_ultima_resposta)]['data_resposta'] > 0:
-                                taxa_esquecimento = 1 - tabela_retencao[str(dias_desde_ultima_resposta)]['taxa_acerto']
+                        linha_retencao = tabela_retencao[tabela_retencao['dias_entre_questoes'] == dias_desde_ultima_resposta]
+                        if not linha_retencao.empty:
+                            taxa_acerto = linha_retencao.iloc[0]['taxa_acerto']
+                            taxa_esquecimento = 1 - taxa_acerto
                         tentativas = len(df_historico_questao)
                         if tentativas-1 < len(fibonacci_sequence) and taxa_esquecimento > 0:
                             intervalo_fibonacci = fibonacci_sequence[tentativas-1]
@@ -430,34 +431,54 @@ class QuestaoService:
             return None
 
     def calcula_taxa_esquecimento(self, id_usuario: int):
-        questoes_respondidas = QuestaoUsuarioRepository.buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario)
-        colunas = {'qtd_repetidas': [0], 'dias_entre_questoes': [0], 'qtd_acertos': [0]}
-        tabela_acertos = pd.DataFrame(colunas)
+        questoes_respondidas = (
+            QuestaoUsuarioRepository
+            .buscar_questoes_usuario_respondidas_por_id_usuario(self, id_usuario)
+        )
+
+        tabela_acertos = pd.DataFrame(
+            columns=['dias_entre_questoes', 'qtd_repetidas', 'qtd_acertos']
+        )
+
         for questao in questoes_respondidas:
-            # print(questao.id_questao, questao.acerto)
-            historico = self.calcula_tempo_resposta_historico_questao(id_usuario, questao.id_questao)
-            if historico is not None and not historico.empty:
-                if len(historico) > 1:
-                    dias_entre_questoes = historico['data_resposta'].diff().dt.days.fillna(0).tolist()[1:]
-                    # print(historico[['data_resposta', 'tempo_resposta']])
-                    if tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes].empty:
-                        tabela_acertos['dias_entre_questoes'] = dias_entre_questoes
-                        tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_repetidas'] = 1
-                        if questao.acerto:
-                            tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] = 1
-                        else:
-                            tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] = 0
-                    else:
-                        tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_repetidas'] += 1
-                        if questao.acerto:
-                            tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] += 1
-                        else:
-                            if (tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] > 1).bool():
-                                tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] -= 1
-                            else:
-                                tabela_acertos[tabela_acertos['dias_entre_questoes'] == dias_entre_questoes]['qtd_acertos'] = 0
+            historico = self.calcula_tempo_resposta_historico_questao(
+                id_usuario,
+                questao.id_questao
+            )
+
+            if historico is None or historico.empty or len(historico) < 2:
+                continue
+
+            dias_entre_questoes = (
+                historico['data_resposta']
+                .diff()
+                .dt.days
+                .iloc[1:]   
+            )
+
+            for dias in dias_entre_questoes:
+                if dias not in tabela_acertos['dias_entre_questoes'].values:
+                    tabela_acertos.loc[len(tabela_acertos)] = {
+                        'dias_entre_questoes': dias,
+                        'qtd_repetidas': 1,
+                        'qtd_acertos': 1 if questao.acerto else 0
+                    }
+                else:
+                    tabela_acertos.loc[
+                        tabela_acertos['dias_entre_questoes'] == dias,
+                        'qtd_repetidas'
+                    ] += 1
+
+                    if questao.acerto:
+                        tabela_acertos.loc[
+                            tabela_acertos['dias_entre_questoes'] == dias,
+                            'qtd_acertos'
+                        ] += 1
+
         if not tabela_acertos.empty:
-            tabela_acertos['taxa_acerto'] = tabela_acertos['qtd_acertos'] / tabela_acertos['qtd_repetidas']
-            # print(tabela_acertos)
+            tabela_acertos['taxa_acerto'] = (
+                tabela_acertos['qtd_acertos'] /
+                tabela_acertos['qtd_repetidas']
+            )
 
         return tabela_acertos
